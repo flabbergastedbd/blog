@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="hacks" />
+    <meta name="tags" content="tools" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2014/11/messing-with-nmdc/" rel="bookmark"
+         title="Permalink to Messing around using NMDC protocol">Messing around using NMDC protocol</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2014-11-15T00:00:00+05:30">
+      [15-11-14]
+    </time>
+
+    [<a href="/category/hacks/">Hacks</a>]
+
+    [hacks,tools]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p><a href="http://en.wikipedia.org/wiki/NeoModus_Direct_Connect"><strong>NeoModus Direct Connect</strong></a> was initially a file-sharing client for
+Windows and Mac users that provided file-sharing capabilities for any type of file within a hub-centric, peer-to-peer network.
+NeoModus Direct Connect inspired the creation of open-source versions of the client, such as Open Direct Connect and later DC++.
+DC++ itself has several specialized spin-off open-source versions as well, such as ApexDC++ and StrongDC++, which are refined with
+features particular to user groups, such as filters, language packs, and search capabilities.</p>
+<h3>Why NMDC?</h3>
+<hr>
+<p>Inside my University the most popular way of sharing files is using these DC Hubs. Not only us, there are many hubs in local networks
+of many educational institutions. For example, look at <a href="http://dc.iitb.me">this</a> cool utility in <strong>IIT-B</strong>. There are many hubs on the
+internet as well whose list is available <a href="http://dchublist.org/nmdc-hubs">here</a>. So, I was intrigued to understand this protocol
+better to see how secure it is. Moreover no major analysis is available on the internet for me to go through.</p>
+<h3>What did I do?</h3>
+<hr>
+<p>The best resources I have are <a href="http://nmdc.sourceforge.net/NMDC.html">this</a> &amp; <a href="http://wiki.gusari.org/index.php?title=Main_Page">this</a>.
+Inorder to be able to test various stuff, I used python to write small snippets using socket library to try different stuff.</p>
+<h3>Bugs/Hacks</h3>
+<hr>
+<p>The commands in the protocol start with a <strong>'$'</strong> sign and end with a <strong>'|'</strong>. The list of commands are available <a href="http://nmdc.sourceforge.net/NMDC.html">here</a>.
+Since the analysis is currently in progress, I will try to update this section whenever I find something new. The hacks are classified
+into three categories</p>
+<ul>
+<li>Client Side - The bugs which are caused because of improper handling in client softwares</li>
+<li>Hub Side - The bugs which are caused because of hub softwares</li>
+<li>Protocol Side - The bugs which try to use the protocol in unexpected ways</li>
+</ul>
+<h3>Client Side Hacks</h3>
+<hr>
+<h4>User Spoofing in public/private chat</h4>
+<p>The command to send public and private messages are of the following format</p>
+<div class="highlight"><pre><span></span>$&lt;john&gt; cats are cute|
+$To: john From: peter $&lt;peter&gt; dogs are more cute|
+</pre></div>
+
+
+<p>If you register your nick as <strong>john&gt;</strong>, some clients strip out the trailing <strong>&gt;</strong> and display the message which makes it appear as if
+it is from <strong>john</strong>. The message commands will look like</p>
+<div class="highlight"><pre><span></span>$&lt;john&gt;&gt; I really don&#39;t care about what you think|
+$To: peter From: john&gt; $&lt;john&gt;&gt; You are an idiot|
+</pre></div>
+
+
+<p>Some clients on which I tested this are</p>
+<ul>
+<li>StrongDC++ (&lt;=2.42)</li>
+<li>DC++ (&lt;=0.843)</li>
+<li>I am sure there will be many more...</li>
+</ul>
+<h3>Hub Side Hacks</h3>
+<hr>
+<h4>Vulnerable Lua Scripts (From SQLi to RCE)</h4>
+<p>Like every other place, insecure extensions bring in more vulnerabilities. Most of the hub softwares make available <strong>a lua scripting
+engine</strong> to make things more extensible. There are tons of lua scripts already present on the internet whose functionality vary from
+chat logging to anagrams. Check <a href="http://script-bot.dcstuff.nl/index.php?dir=">here</a> for some sample scripts. So, how can you exploit
+these?? Check <a href="https://github.com/hjpotter92/ptokax-scripts/blob/4173050f3d35f11b90c0c21bcdd6d96d5459e3fb/external/stats/toks.lua#L60">this</a>!
+There are scripts which use SQL databases, some chat loggers write directly to a log file with certain naming etc... So if you are
+lucky enough to find a script which uses unescaped user data in its db queries, you might actually end up having a SQLi right there.
+One way to go is to make yourself Admin or elevate it to RCE if possible. How to detect it? Generally to keep things simple for the
+normal users, hubs send command of the following format which clients tend to display as hub options for a user. The user command looks
+like <a href="http://nmdc.sourceforge.net/NMDC.html#_usercommand">this</a></p>
+<div class="highlight"><pre><span></span>$UserCommand 2 6 Kick$$To: %[nick] From: %[mynick] $&lt;%[mynick]&gt; You are being kicked====|$Kick %[nick]|| $UserCommand 255 1|
+</pre></div>
+
+
+<p>So, dig around nicely for such instructions and you might get lucky finding some lua scripts which provide some extra functionality.
+Try fingerprinting the script, search on internet, do a source code review &amp; BOOM!! &lt;-- All this if you are lucky :P</p>
+<p>Sample UserCommands grabbed from a hub. There is lot of information leak which will tell you which script it is ;)</p>
+<div class="highlight"><pre><span></span><span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Ranks</span><span class="err">\</span><span class="nt">Live</span> <span class="nt">user</span> <span class="nt">location</span> <span class="nt">statistics</span> <span class="nt">by</span> <span class="nt">country</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">cclive</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Ranks</span><span class="err">\</span><span class="nt">Live</span> <span class="nt">user</span> <span class="nt">location</span> <span class="nt">statistics</span> <span class="nt">by</span> <span class="nt">city</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">citylive</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">cc</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Ranks</span><span class="err">\</span><span class="nt">All</span> <span class="nt">time</span> <span class="nt">user</span> <span class="nt">location</span> <span class="nt">statistics</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">cchist</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Hub</span> <span class="nt">news</span><span class="err">\</span><span class="nt">Read</span> <span class="nt">hub</span> <span class="nt">news</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">hubnews</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">lines</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Releases</span><span class="err">\</span><span class="nt">List</span> <span class="nt">of</span> <span class="nt">available</span> <span class="nt">releases</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">rellist</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="k">type</span><span class="o">&gt;</span><span class="cp">]</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">lines</span><span class="o">&gt;</span><span class="cp">]</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">category</span> <span class="ow">or</span> <span class="nx">publisher</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Releases</span><span class="err">\</span><span class="nt">Find</span> <span class="nt">release</span> <span class="nt">by</span> <span class="nt">name</span> <span class="nt">or</span> <span class="nt">category</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">relfind</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">name</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Chat</span> <span class="nt">history</span><span class="err">\</span><span class="nt">Main</span> <span class="nt">chat</span> <span class="nt">history</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">history</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">lines</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Chat</span> <span class="nt">history</span><span class="err">\</span><span class="nt">Your</span> <span class="nt">main</span> <span class="nt">chat</span> <span class="nt">history</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">myhistory</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">lines</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Custom</span> <span class="nt">nicks</span><span class="err">\</span><span class="nt">Get</span> <span class="nt">users</span> <span class="nt">real</span> <span class="nt">nick</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">realnick</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">nick</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Custom</span> <span class="nt">nicks</span><span class="err">\</span><span class="nt">Custom</span> <span class="nt">nick</span> <span class="nt">list</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">custlist</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Hublist</span><span class="err">\</span><span class="nt">Show</span> <span class="nt">friendly</span> <span class="nt">hubs</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">showhubs</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+<span class="nt">UserCommand</span> <span class="nt">1</span> <span class="nt">3</span> <span class="nt">LJ</span> <span class="nt">palace</span><span class="err">\</span><span class="o">.::</span> <span class="nt">Other</span><span class="err">\</span><span class="nt">Calculate</span> <span class="nt">an</span> <span class="nt">equation</span> <span class="o">$&lt;%</span><span class="cp">[</span><span class="nx">mynick</span><span class="cp">]</span><span class="o">&gt;</span> <span class="o">+</span><span class="nt">calculate</span> <span class="o">%</span><span class="cp">[</span><span class="nx">line</span><span class="p">:</span><span class="o">&lt;</span><span class="nx">equation</span><span class="o">&gt;</span><span class="cp">]</span><span class="o">&amp;</span><span class="p">#</span><span class="nn">124</span><span class="o">;</span>
+</pre></div>
+
+
+<h3>Protocol Side Hacks</h3>
+<hr>
+<h4>Spoofing Share Size</h4>
+<p>Since there is no practical way for the hub to verify your share size, you can spoof yours to attract people to browse your shared files.
+This is not a huge attack on its own, but it has helped to draw the attention of users and make them download some malware :P. The command
+in which share size is sent looks like <a href="http://nmdc.sourceforge.net/NMDC.html#_myinfo">this</a>.</p>
+<div class="highlight"><pre><span></span>$MyINFO $ALL johndoe &lt;++ V:0.673,M:P,H:0/1/0,S:2&gt;$ $LAN(T3)0x31$example@example.com$1234$|
+</pre></div>
+
+
+<h4>Eavesdropping on users</h4>
+<p>The protocol is designed in such a way that whenever a user searches for a file, all the clients connected to that hub get
+this search query. If you are using a dc client software, you will never know what others are searching since the clients automatically
+send the search results by actually searching your shared files, but if you use a handcrafted client you can easily categorize all the
+searches of a particular user. When the download slots for a file are not enough, the client software tries to search using the <strong>TTH</strong>
+of the file. Again this search is sent to all the connected clients. It is easy to match a TTH to a file, by just searching it on the hub
+itself ;). Though this is facilitated by the protocol itself, I find it amusing to see what other users are searching for. So, some
+screenshots of search queries that are extracted from some online hubs :P are present <a href="http://i.imgur.com/X3CPMZI.png">here</a>,
+<a href="http://i.imgur.com/XsPTNL5.jpg">here</a> &amp; <a href="http://i.imgur.com/013VAZN.png">here</a>.</p>
+<p><img src="http://i.imgur.com/X3CPMZI.png" class="image-center" style="height:500px" alt="IRC Screen"/></p>
+<p><img src="http://i.imgur.com/kPNCDQY.png" class="image-center" style="height:500px" alt="IRC Screen"/></p>
+<p>Instead of the ip addresses we can easily track the searches using registered nicks on the hub. All the TTH searches are the files
+that are being downloaded by users. Some <a href="http://pastebin.com/Xpr5HYfd">searches</a> on my university hubs xD</p>
+<h4>Spreading malware (Spoofing search results)</h4>
+<p>We have already seen that the hub sends the search query to every connected client for results. We can send fake results as there
+is no way a hub can verify if we have a file or not. So, if the user wants to download one of our results, we can just send
+malware. But this is not as simple as it seems. There are many factors which are to be considered. For example, search queries can be
+of following <a href="http://nmdc.sourceforge.net/NMDC.html#_search">types</a></p>
+<div class="highlight"><pre><span></span>$Search 192.168.1.5:412 T?T?500000?1?Gentoo$2005|
+$Search Hub:SomeNick T?T?500000?1?Gentoo$2005|
+$Search 192.168.1.5:412 F?T?0?9?TTH:TO32WPD6AQE7VA7654HEAM5GKFQGIL7F2BEKFNA|
+$Search Hub:SomeNick F?T?0?9?TTH:TO32WPD6AQE7VA7654HEAM5GKFQGIL7F2BEKFNA|
+</pre></div>
+
+
+<p>So, whenever you get one search query, you can send a <strong>convincing</strong> fake result. I wrote a small python script which sends a fake
+result for every search :P</p>
+<div class="highlight"><pre><span></span>$SR MyNick F:_\search_term.proper_extension&lt;0x05&gt;file_size 5/5&lt;0x05&gt;HubName (192.168.1.1:411)|
+</pre></div>
+
+
+<p>But this is not as easy as it seems because our search results have to be convincing. Things to keep in mind</p>
+<ul>
+<li>If the file is big and there are matching results, then the victim client will try to download part of file from other clients.</li>
+<li>Using appropriate file extension when particular type of files are searched. Clients will filter results which donot match extension</li>
+<li>Using a unique TTH hash for every different fake file :P</li>
+<li>Using convincing file size because there cannot be a movie mp4 file of 25kB :P</li>
+<li>Let me tell you it is more complicated to produce convincing results, best way is to cache the search results and extract useful
+filenames and TTH hashes. This is tricky.</li>
+</ul>
+<h4>Just watching the world burn (Making downloads of all users useless)</h4>
+<p>There are few people who just want to watch the world burn. For them, there is a facility in NMDC. The clients search using TTH
+hashes for alternate sources to download a part of file. If you respond to that search and send random binary data, the downloaded
+file will end up being useless. Nothing particularly of interest, but will be fun to mess with few people. This feat will require huge
+processing power and great bandwidth even for an active hub with users in two digits.</p>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

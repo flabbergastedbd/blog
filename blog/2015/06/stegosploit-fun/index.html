@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tools" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2015/06/stegosploit-fun/" rel="bookmark"
+         title="Permalink to Stegosploit is simple fun!!">Stegosploit is simple fun!!</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2015-06-08T00:00:00+05:30">
+      [08-06-15]
+    </time>
+
+    [<a href="/category/python/">Python</a>]
+
+    [tools]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>If you are not familiar with the word <strong>STEGOSPLOIT</strong> then you must definitely look at the
+following links</p>
+<ul>
+<li><a href="https://conference.hitb.org/hitbsecconf2015ams/sessions/stegosploit-hacking-with-pictures/">The actual talk</a></li>
+<li>Followed by huge popularity. Just google the word!</li>
+<li>Then <a href="https://medium.com/@christianbundy/why-stegosploit-isn-t-an-exploit-189b0b5261eb">criticism</a></li>
+<li>Then, I stopped following the topic at this stage.</li>
+</ul>
+<p>Slides of the talk are available <a href="https://conference.hitb.org/hitbsecconf2015ams/wp-content/uploads/2015/02/D1T1-Saumil-Shah-Stegosploit-Hacking-with-Pictures.pdf">here</a></p>
+<h4>My Thoughts</h4>
+<ul>
+<li>Would love to have a tool that supports all image types. Other than that, embedding html in image metadata is common.</li>
+<li>Non tech people who didn't think of what is happening in the background started giving out blunt statements like <em>PICTURES ARE NO MORE SAFE</em>. And
+every other noob went crazy.</li>
+</ul>
+<h4>What counts?</h4>
+<p>The mention of <em>lcamtuf</em> in the slides made me google his <strong>JPG+HTML</strong> <a href="http://lcamtuf.coredump.cx/squirrel/">polyglot</a>. After going through the slides
+of Mr.Shah, I decided to write a simple PoC with the exact steps taken from his slides. So, my innocent plan was to</p>
+<ul>
+<li>Hide an exploit payload in the image pixels.</li>
+<li>Create a <strong>HTML+PNG</strong> polyglot so the image itself can be used as a loader.</li>
+<li>Then use <strong>HTML5</strong> canvas to reconstruct the actual payload in the browser.</li>
+</ul>
+<p>For anyone who read those slides all this would seem normal &amp; yes it is!!</p>
+<h4>Script</h4>
+<p>{% gist tunnelshade/757de16b6ac6f5f337fd %}</p>
+<h4>How it works??</h4>
+<ul>
+<li>First it takes the payload file and converts the content into a bit string.</li>
+<li>This bit string is hidden inside <strong>LSB</strong> bit of R, G &amp; B pixel values of the input PNG file. This is done using <a href="https://pypi.python.org/pypi/Pillow/2.8.2">Pillow</a>.</li>
+<li>Then the HTML requried to decode this payload is added to the same PNG file to create a HTML+PNG polyglot.</li>
+<li>For the final PNG to deliver the payload, it should be served with content type <strong>text/html</strong>.</li>
+<li>Then when image is loaded, the browser execute the HTML in it leading to reconstruction and running of exploit.</li>
+</ul>
+<h4>Selling points</h4>
+<ul>
+<li>Common users are aware of malicious websites but not malicious images yet ;)</li>
+<li>As an end user, what difference do you see?</li>
+</ul>
+<p><img alt="Innocent cat" src="https://i.imgur.com/PCktIck.jpg"></p>
+<ul>
+<li>Look again :P</li>
+</ul>
+<p><img alt="Innocent cat becomes evil" src="https://i.imgur.com/TcjV8yu.jpg"></p>
+<h4>Difficulties</h4>
+<ul>
+<li>Who servers images with html content type? Unless you want to pwn users!</li>
+<li>ML trained detectors can catch these images, but you can always improvise ;)</li>
+</ul>
+<p><strong>PS: The script only works on some PNGs for now</strong></p>
+<h4>Sample Console Output</h4>
+<div class="highlight"><pre><span></span>.-<span class="o">[</span>tunnelshade@MacBook-Pro.local:~/workspace/misc/poly<span class="o">]</span>
+<span class="err">&#39;</span>-&gt;$ python2 convert.py -i cat.png -p payload.html -o cute_kitty.png
+<span class="o">[</span>*<span class="o">]</span> Opening payload and converting to bit string
+<span class="o">[</span>*<span class="o">]</span> Hiding data in LSB
+<span class="o">[</span>*<span class="o">]</span> Saving intermediate PNG
+<span class="o">[</span>*<span class="o">]</span> Opening intermediate png <span class="k">for</span> adding loader
+<span class="o">[</span>*<span class="o">]</span> Writing PNG header
+<span class="o">[</span>*<span class="o">]</span> Writing IHDR chunk
+<span class="o">[</span>*<span class="o">]</span> Minifying loader html
+<span class="o">[</span>*<span class="o">]</span> Writing iTXt chunk containing loader
+<span class="o">[</span>*<span class="o">]</span> Writing the remaining data
+</pre></div>
+
+
+<h4>Sample Polyglot with alert() payload</h4>
+<p><img alt="Innocent cat becomes evil" src="https://i.imgur.com/tiEFZbc.png"></p>
+<h4>Serving the Polyglot</h4>
+<p>The image has to be served with a <strong>text/html</strong> content type. If not, the browser parser will
+ignore the html part and just render the image. Below is a sample python script which when run in the
+same directory as of the image, will serve the png with html content type.</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/python</span>
+
+<span class="kn">import</span> <span class="nn">SimpleHTTPServer</span>
+<span class="kn">import</span> <span class="nn">SocketServer</span>
+
+<span class="n">PORT</span> <span class="o">=</span> <span class="mi">8000</span>
+
+<span class="n">Handler</span> <span class="o">=</span> <span class="n">SimpleHTTPServer</span><span class="o">.</span><span class="n">SimpleHTTPRequestHandler</span>
+<span class="n">Handler</span><span class="o">.</span><span class="n">extensions_map</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+    <span class="s1">&#39;.png&#39;</span><span class="p">:</span> <span class="s1">&#39;text/html&#39;</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">httpd</span> <span class="o">=</span> <span class="n">SocketServer</span><span class="o">.</span><span class="n">TCPServer</span><span class="p">((</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">PORT</span><span class="p">),</span> <span class="n">Handler</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">print</span> <span class="s2">&quot;Serving at http://127.0.0.1:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">PORT</span><span class="p">)</span>
+    <span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+    <span class="n">httpd</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

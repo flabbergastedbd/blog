@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tools" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2016/12/pocuito-extension/" rel="bookmark"
+         title="Permalink to Pocuito - A little web extension">Pocuito - A little web extension</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2016-12-01T00:00:00+05:30">
+      [01-12-16]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [tools]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>One of the main issues people face in web application based organizations is the <strong>channel of communication between the
+security team and developers</strong>. This often involves <strong>lengthy steps for reproduction of vulnerabilities</strong>. Often times
+these are tedious to follow let alone repeat multiple times for the pentesters. So, I was behind a solution to this problem.
+<a href="https://blog.mozilla.org/security/2014/01/20/reporting-web-vulnerabilities-to-mozilla-using-zest/">Mozilla ZEST</a> is something
+that I have known for a while. <strong>ZEST</strong> allows to replay requests and some assert statements. The serious <em>limitation of this
+approach is in modern day web applications which need complex user interactions on the interface</em>.</p>
+<h4>Solution</h4>
+<p>To encounter the above limitation I assumed the logical way is to use <strong>a browser extension to record/replay user
+interactions like clicks and input fills</strong>. The stringent rules on web extensions in chrome don't allow you to read/tamper
+requests. Hence, the hybrid solution is to use a proxy and write an extension that makes use of that proxy to tamper &amp; record
+required requests.</p>
+<h4>Pocuito</h4>
+<p>Pocuito is a two part solution.</p>
+<ul>
+<li>Extension that you install on your browser.</li>
+<li>Proxy server which can be deployed for multiple users inside your org network.</li>
+</ul>
+<p><strong>NOTE: The proxy maintains session based on the <code>remote_ip</code> it sees the request from, hence use it from local network</strong></p>
+<h4>Download</h4>
+<p>You can download the extension &amp; proxy on <a href="https://github.com/tunnelshade/pocuito/releases">Github Releases</a>.</p>
+<h4>Usage</h4>
+<p>I highly suggest going through the <a href="https://github.com/tunnelshade/pocuito">README</a> which will stay updated all the time.</p>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

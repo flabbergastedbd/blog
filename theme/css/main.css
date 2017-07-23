@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css?family=Nova+Square');
+@import url('https://fonts.googleapis.com/css?family=Electrolize');
+@import url('monokai.css');
+
+
+html, button, input, select, textarea,
+.pure-g [class *= "pure-u"] {
+  /* Set your content font stack here: */
+  font-family: 'Lucida Grande', "Verdana", sans-serif;
+}
+
+body {
+  background-color: #213845;
+  color: #9fbed1;
+}
+
+img
+{
+  .pure-img;
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.image-center
+{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+a:link {
+  color: #ffffff;
+}
+
+a:visited {
+  color: #f1f6f8;
+}
+
+/* Title Links */
+h1 {
+  font-family: "Nova Square", cursive;
+}
+
+a.no_underline {
+  text-decoration: none;
+}
+
+h1 a {
+  .no_underline;
+}
+
+/* Page titles */
+h2 {
+  font-family: "Electrolize", sans-serif;
+}
+
+legend a {
+  text-decoration: none;
+}
+
+ul {
+  list-style-type: square;
+}
+
+.no_bullets {
+  list-style: none;
+}
+
+p {
+  text-align: justify;
+}

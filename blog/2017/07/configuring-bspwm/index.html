@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tricks" />
+    <meta name="tags" content="info" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2017/07/configuring-bspwm/" rel="bookmark"
+         title="Permalink to Configuring bspwm for my setup">Configuring bspwm for my setup</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2017-07-20T00:00:00+05:30">
+      [20-07-17]
+    </time>
+
+    [<a href="/category/linux/">Linux</a>]
+
+    [tricks,info]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>After about few months with i3, I stumbled upon <a href="https://github.com/Airblader/i3">i3gaps</a> in my quest for some space between the tiling
+windows. If you haven't heard or used i3 like window manager, you might prefer <a href="http://tunnelshade.in/blog/2014/05/making-i3-beautiful/">using it first</a>.
+Soon, I started seeing awesome configurations of <a href="https://www.herbstluftwm.org/index.html">herbstluftwm</a> and <a href="https://github.com/baskerville/bspwm">bspwm</a>.
+Out of these two I ended up picking <strong>bspwm</strong> because of it's simplicity and configurability.</p>
+<p><img src="https://raw.githubusercontent.com/tunnelshade/awesome-dots/8af7e1fa947206aae6feb1a17d422b59c96c4bb0/screenshots/dirty1.png" class="image-center" alt="Dirty Screen"/></p>
+<p>Well, in this article, I will follow step by step procedure of setting up bspwm. My <a href="http://github.com/tunnelshade/awesome-dots">dotfiles</a></p>
+<h4><strong>Outline</strong></h4>
+<p>bspwm is another tiling window manager. It only responds to X events, and messages recevied on a dedicated socket. So we need another program to
+listen for our keybindings and forward appropriate commands to this socket. Luckily <strong>bspc</strong> is a program that writes messages to bspwm's socket.
+<strong>sxhkd</strong> (Simple X hotkey daemon) is an X daemon that can be made to execute commands as reaction to input events. Some configuration files have to be
+created from scratch and that is what makes this experience rewarding. Using i3 or similar wm for sometime is recommended before trying bspwm.</p>
+<p><strong>Packages to install</strong></p>
+<ul>
+<li>bspwm</li>
+<li>sxhkd</li>
+</ul>
+<p><strong>Optional</strong></p>
+<ul>
+<li>rofi (application launcher)</li>
+<li>i3lock (screen lock)</li>
+<li>gnome-keyring &amp; libsecret (If you want avoid retyping ssh &amp; gpg passwords in one session)</li>
+<li>compton (compositor)</li>
+<li>feh (set wallpaper)</li>
+<li>yabar (status bar)</li>
+<li>poweline fonts (fancy symbols)</li>
+</ul>
+<h4><strong>Steps</strong></h4>
+<ul>
+<li>Edit bspwm startup shell script which should be located at <a href="https://github.com/tunnelshade/awesome-dots/blob/50df998c78eca810916c71ea22ce5ccad7706fdb/.config/bspwm/bspwmrc"><strong>.config/bspwm/bspwmrc</strong></a>
+to accomplish the following tasks.</li>
+<li>Start sxhkd, compton, gnome-keyring, set wallpaper and any other startup app.</li>
+<li>
+<p>Run some bspc commands to define attributes and create workspaces. (<code>man bspc</code> or <a href="https://github.com/baskerville/bspwm/wiki/Command-Syntax-Rewrite">bspc docs</a>).</p>
+</li>
+<li>
+<p>Now as basic bspwm is setup, let us edit our <a href="https://github.com/tunnelshade/awesome-dots/blob/50df998c78eca810916c71ea22ce5ccad7706fdb/.config/sxhkd/sxhkdrc"><strong>.config/sxhkd/sxhkdrc</strong></a>
+configuration file to define our keybindings for</p>
+</li>
+<li>
+<p>Switching focus, swapping nodes, resizing etc... (Some examples here, rest in the configuration file is commented!!).</p>
+<div class="highlight"><pre><span></span># Close under focus node
+super + shift + q
+        bspc node -c
+
+super + Return
+        termite -e /usr/bin/fish
+
+# Resize
+## expand the tiled space in the given direction
+super + alt + {h,j,k,l}
+        bspc node {@west -r -10,@south -r +10,@north -r -10,@east -r +10}
+</pre></div>
+
+
+</li>
+<li>
+<p>Application Launcher.</p>
+<div class="highlight"><pre><span></span># I use rofi, see the screenshots for its beauty
+# Launcher
+super + d
+            rofi -show run -font &quot;Monospace Bold 16&quot; -m -1 -fullscreen -padding 300 -hide-scrollbar
+</pre></div>
+
+
+</li>
+<li>
+<p>Multimedia keys.</p>
+<div class="highlight"><pre><span></span># Functional key bindings
+# I use mpd, so mpc can be used to switch music tracks
+XF86Audio{Stop,Prev,Next,Play}
+        mpc {stop,prev,next,toggle}
+
+# xbacklight has to be installed
+XF86MonBrightness{Up,Down}
+        xbacklight {-inc 10,-dec 10}
+
+# Using ALSA as it is present by default in most cases
+XF86Audio{Raise,Lower}Volume
+        amixer sset Master {5%+,5%-}
+
+XF86AudioMute
+        amixer sset Master toggle
+</pre></div>
+
+
+</li>
+<li>
+<p>Using a status bar helps, I use <a href="https://github.com/geommer/yabar">yabar</a> and
+<a href="https://github.com/tunnelshade/awesome-dots/blob/50df998c78eca810916c71ea22ce5ccad7706fdb/.config/yabar/yabar.conf">my config</a>. Helper scripts are present in <code>scripts</code>
+directory.</p>
+</li>
+<li>
+<p>Wondering when we will start <code>nm-applet</code> and other system tray items?? I don't! I switched to using <code>nmtui</code>.</p>
+</li>
+</ul>
+<h4><strong>Beautification</strong></h4>
+<ul>
+<li>
+<p>The key to beauty is <strong>font</strong>, <strong>colorscheme</strong> and a complimenting <strong>wallpaper</strong>. I use <code>Fira Mono for Powerline</code>, <code>FontAwesome</code> &amp; <code>gruvbox</code> colorscheme. Use
+<a href="http://terminal.sexy/"><strong>terminal.sexy</strong></a> to get some colorschemes that can be exported in suitable format for almost <strong>all terminal emulators</strong>.</p>
+</li>
+<li>
+<p>Next up are out ugliest component i.e GTK Apps :P. Instead of editing configuration files directly, I highly recommend <strong>lxappearance</strong>, which has
+absolutely no dependencies! Use it set your GTK, Icon &amp; Cursor theme. GTK themes are picked from <strong>~/.themes</strong> &amp; remaining from <strong>~/.icons</strong>.</p>
+</li>
+<li>
+<p>Use some cool theme and even now, if the buttons are ugly make sure that you have the required <strong>gtk-engine</strong> installed. For instance, I use <strong>Zukwito</strong>,
+so I need <strong>gtk-engine-murrine</strong>. Now, your gtk apps must be cool as in any other DE.</p>
+</li>
+</ul>
+<h4><strong>Screenshots</strong></h4>
+<p><img src="https://raw.githubusercontent.com/tunnelshade/awesome-dots/8af7e1fa947206aae6feb1a17d422b59c96c4bb0/screenshots/dirty2.png" class="image-center" alt="Dirty Screen"/></p>
+<p><a href="https://raw.githubusercontent.com/tunnelshade/awesome-dots/8af7e1fa947206aae6feb1a17d422b59c96c4bb0/screenshots/multi_monitor.jpg">Multi Monitor Screenshot</a></p>
+<h4><strong>Other Apps</strong></h4>
+<ul>
+<li>
+<p>A list of applications that I use</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>: Application</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Window Manager</strong></td>
+<td>: bspwm</td>
+</tr>
+<tr>
+<td><strong>Broswer</strong></td>
+<td>: firefox</td>
+</tr>
+<tr>
+<td><strong>Terminal</strong></td>
+<td>: termite</td>
+</tr>
+<tr>
+<td><strong>Shell</strong></td>
+<td>: fish</td>
+</tr>
+<tr>
+<td><strong>Editor</strong></td>
+<td>: vim</td>
+</tr>
+<tr>
+<td><strong>Music Player</strong></td>
+<td>: mpd/ncmpcpp</td>
+</tr>
+<tr>
+<td><strong>Video Player</strong></td>
+<td>: mpv</td>
+</tr>
+<tr>
+<td><strong>Launcher</strong></td>
+<td>: rofi</td>
+</tr>
+<tr>
+<td><strong>IRC Client</strong></td>
+<td>: weechat</td>
+</tr>
+<tr>
+<td><strong>GTK Theme</strong></td>
+<td>: zukwito</td>
+</tr>
+<tr>
+<td><strong>Icon Theme</strong></td>
+<td>: faenza</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p><strong>PS</strong>: Don't forget to push your dotfiles to github so that anyone else can use those.</p>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tricks" />
+    <meta name="tags" content="info" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2013/03/post-data-sql-injection-using-sqlmap/" rel="bookmark"
+         title="Permalink to Post Data SQL Injection using SQLMAP">Post Data SQL Injection using SQLMAP</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2013-03-11T00:00:00+05:30">
+      [11-03-13]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [tricks,info]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>The best thing about sqlmap is that it is free &amp; you can use it for
+SQL INJECTION even for POST data. This post is meant to provide you
+a quick look into the options that sqlmap provides for performing
+sql injections in post data. For all those who don't know about sqlmap,
+it is a database automated sql injection &amp; database takeover tool :).
+If you have some experience using the free version of Havij, then I
+urge you to try this tool because this is the best open source tool
+(by default it doesnot have any GUI ), but you can get one if you like.
+( I suggest you to stick with CLI version ).</p>
+<p>The important arguments that are available for you are -</p>
+<ul>
+<li><strong>-u</strong>     : This is the most important parameter, because this is where you give the url where the request is supposed to be made.( For a POST request make sure you give the correct url i.e the place where the corresponding form is posting rather than the page where the form is present :P)</li>
+<li><strong>--data</strong>  : When you provide this argument with some data, sqlmap will perform POST requests automatically. The POST data of a request can be written directly, if help needed use some tool like ZAP or Burp Suite or Live HTTP Headers to get the post data</li>
+</ul>
+<p>Some other important arguments that are usefull -</p>
+<ul>
+<li><strong>--proxy</strong>  : This is used when you wish to tunnel all your requests through a proxy. The protocol must also be mentioned here.</li>
+<li><strong>--proxy-cred</strong>  : This is used to provide credentials for proxy server.</li>
+<li><strong>--tor</strong> : This allows you to use tor anonymity network.( --tor-port &amp; --tor-type are used if these settings are different from the default values )</li>
+</ul>
+<p>So a command using all these arguments would look like -</p>
+<div class="highlight"><pre><span></span>./sqlmap.py -u <span class="s2">&quot;URL WHERE THE DATA WILL BE POSTED&quot;</span> --data<span class="o">=</span><span class="s2">&quot;POST DATA&quot;</span> --proxy<span class="o">=</span><span class="s2">&quot;PROTO://IP:PORT&quot;</span> --proxy-cred<span class="o">=</span><span class="s2">&quot;username:password&quot;</span>
+</pre></div>
+
+
+<p>For example if we have a form posting data to <strong>www.example.com/submit.php</strong> &amp; the data is <strong>search=hello&amp;value=submit</strong> then the command will look like this - (we are using tor network this time :P)</p>
+<div class="highlight"><pre><span></span>./sqlmap.py -u <span class="s2">&quot;http://www.example.com/submit.php&quot;</span> --data<span class="o">=</span><span class="s2">&quot;search=hello&amp;value=submit&quot;</span> --tor
+</pre></div>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

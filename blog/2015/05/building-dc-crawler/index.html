@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tools" />
+    <meta name="tags" content="python" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2015/05/building-dc-crawler/" rel="bookmark"
+         title="Permalink to Crawler for NMDC networks">Crawler for NMDC networks</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2015-05-02T00:00:00+05:30">
+      [02-05-15]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [tools,python]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>What is the meaning of a crawler in a file sharing network? Very simple for me. Something that collects all
+the files that are shared by clients on that dc network. But collecting all the shared files is a huge task. So, I
+reduced my task to just collecting metadata and organising that information. Metadata about shared files in a dc
+network is nothing but the file lists that the client softwares create. The main point of crawling is for stats.</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; standalone=&quot;yes&quot;?&gt;</span>
+<span class="nt">&lt;FileListing</span> <span class="na">Version=</span><span class="s">&quot;1&quot;</span> <span class="na">CID=</span><span class="s">&quot;PQ5QETB5G44DH36XGW7INMWHPH6WDDX5KUGCCIY&quot;</span> <span class="na">Base=</span><span class="s">&quot;/&quot;</span> <span class="na">Generator=</span><span class="s">&quot;DC++ 0.843&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;Directory</span> <span class="na">Name=</span><span class="s">&quot;F:_&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;Directory</span> <span class="na">Name=</span><span class="s">&quot;fimap_alpha_v09&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;Directory</span> <span class="na">Name=</span><span class="s">&quot;config&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;generic.xml&quot;</span> <span class="na">Size=</span><span class="s">&quot;2235&quot;</span> <span class="na">TTH=</span><span class="s">&quot;6BS6CZ2DQJ6LFZYQCKBC6C5GUHSVLPCCJCTM7BQ&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;perl.xml&quot;</span> <span class="na">Size=</span><span class="s">&quot;1685&quot;</span> <span class="na">TTH=</span><span class="s">&quot;JPHFI42ZEPPT4JM772H2Q4W2PDKKTWA4TAE3NDI&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;php.xml&quot;</span> <span class="na">Size=</span><span class="s">&quot;7835&quot;</span> <span class="na">TTH=</span><span class="s">&quot;S7WKKYRMANXTMEP4HCIKM6VNDVLSQTYD5EZHEBY&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/Directory&gt;</span>
+            <span class="nt">&lt;Directory</span> <span class="na">Name=</span><span class="s">&quot;doc&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;AUTHORS&quot;</span> <span class="na">Size=</span><span class="s">&quot;345&quot;</span> <span class="na">TTH=</span><span class="s">&quot;MJ4TIIXYJZF57ZHNSTECX3OZPVX3CQD7AXHAR2Y&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;LICENSE&quot;</span> <span class="na">Size=</span><span class="s">&quot;17987&quot;</span> <span class="na">TTH=</span><span class="s">&quot;MRQYN544QVRPQIB4ZPYDXYGP6KSBZUI2V2J3HHY&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;THX&quot;</span> <span class="na">Size=</span><span class="s">&quot;2642&quot;</span> <span class="na">TTH=</span><span class="s">&quot;PSCYZ37EZYTONNWROEBIMFXEQ3ZIDUQZUIUK4NA&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/Directory&gt;</span>
+            <span class="nt">&lt;Directory</span> <span class="na">Name=</span><span class="s">&quot;xgoogle&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;__init__.py&quot;</span> <span class="na">Size=</span><span class="s">&quot;1354&quot;</span> <span class="na">TTH=</span><span class="s">&quot;7MGPO5Y5SKPOI3FI2Z4QSJNA3PBSXPLOJBIGWHA&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;browser.py&quot;</span> <span class="na">Size=</span><span class="s">&quot;4543&quot;</span> <span class="na">TTH=</span><span class="s">&quot;DWSYNHG46ROVBFFLBM5MO72IMBKXYVTPZDIROHQ&quot;</span><span class="nt">/&gt;</span>
+                <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;sponsoredlinks.py&quot;</span> <span class="na">Size=</span><span class="s">&quot;7999&quot;</span> <span class="na">TTH=</span><span class="s">&quot;EIG7R35X7DAON6INPYBO5OSLCQELVOOSCE4TYHI&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;/Directory&gt;</span>
+            <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;crawler.py&quot;</span> <span class="na">Size=</span><span class="s">&quot;5873&quot;</span> <span class="na">TTH=</span><span class="s">&quot;6WVCYHBICDJWFRONNTPKB4FUBG4FU2FVDJGQUFQ&quot;</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;fimap.py&quot;</span> <span class="na">Size=</span><span class="s">&quot;32569&quot;</span> <span class="na">TTH=</span><span class="s">&quot;TFWMQYA3OAYTJTXIFDMCBGTNX7RUGVZXBTSOESI&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/Directory&gt;</span>
+        <span class="nt">&lt;File</span> <span class="na">Name=</span><span class="s">&quot;Andrew Ng- Deep Learning.mp4&quot;</span> <span class="na">Size=</span><span class="s">&quot;244082418&quot;</span> <span class="na">TTH=</span><span class="s">&quot;ZDRCQLMCUCBAN2MTN3NB3V5FHSERQY3XQNPO6KA&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+<span class="nt">&lt;/FileListing&gt;</span>
+</pre></div>
+
+
+<p>Since a db is needed to store all the data, I decided to use <strong>PostgreSQL</strong>. The reason being that I had some experience with
+it as we use the same in OWTF. Writing SQL queries is a pain for this pet project, so I decided to use <strong>SQLAlchemy ORM</strong>.</p>
+<h4>Models</h4>
+<p>There are only two models for this crawler.</p>
+<ul>
+<li>User</li>
+<li>File</li>
+</ul>
+<p>Both are joined by a many to many relationship as same file can be with multiple users and a user will have multiple files.</p>
+<h4>Configuration</h4>
+<p>The crawler is <a href="https://github.com/tunnelshade/dcfury/blob/master/nmdc.py">here</a>. The db settings are present to the end of
+the file.</p>
+<div class="highlight"><pre><span></span><span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;DATABASE_IP&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+<span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;DATABASE_PORT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;5432&quot;</span>
+<span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;DATABASE_NAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dcrawl&quot;</span>
+<span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;DATABASE_USER&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;crawl_bot&quot;</span>
+<span class="n">db_settings</span><span class="p">[</span><span class="s2">&quot;DATABASE_PASS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;crawl_bot&quot;</span>
+</pre></div>
+
+
+<h4>Usage</h4>
+<ul>
+<li>Get the crawler script, better if you get the whole <a href="https://github.com/tunnelshade/dcfury">repo</a></li>
+<li>Configure the database settings, i.e create the db role and db if necessary. There is a helper script called <em>db_setup.sh</em> script
+in the repo</li>
+<li>
+<p>Since this was an experimental project, if you wish to listen/crawl a particular hub, you have to edit the crawler. Find the following
+line and change the ip and port to the desired value.</p>
+<p>:::python
+hub = NMDCClient("10.8.20.21", 4112, db_settings)</p>
+</li>
+<li>
+<p>Now, you are ready. Use one of the following commands</p>
+<p>:::bash
+python2 nmdc.py listen # Will connect to a hub and just be in listen mode i.e will keep printing to screen what it gets
+python2 nmdc.py collect # Will collect file lists from the users and place the xml files in a folder named file_lists
+python2 nmdc.py analyse # Will parse the collected files in the file_lists folder and add them to the db with proper relationships with the user</p>
+</li>
+</ul>
+<h4>Working</h4>
+<ul>
+<li>See the source code :P</li>
+</ul>
+<h4>Demos</h4>
+<hr>
+<iframe width="640" height="480" src="https://www.youtube.com/embed/o7UbuifCXpI" frameborder="0" allowfullscreen></iframe>
+
+<hr>
+<iframe width="640" height="480" src="https://www.youtube.com/embed/rgcNEaU4kJs" frameborder="0" allowfullscreen></iframe>
+
+<hr>
+<iframe width="640" height="480" src="https://www.youtube.com/embed/AB4Tj_EkDrQ" frameborder="0" allowfullscreen></iframe>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

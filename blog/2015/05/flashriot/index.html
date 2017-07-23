@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tools" />
+    <meta name="tags" content="info" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2015/05/flashriot/" rel="bookmark"
+         title="Permalink to Flashriot - Using Flashbang for bulk analysis">Flashriot - Using Flashbang for bulk analysis</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2015-05-22T00:00:00+05:30">
+      [22-05-15]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [tools,info]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>I recently had the necessity to test multiple flash files for XSS. <a href="https://cure53.de/flashbang">Flashbang</a>
+is an awesome tool for this kind of work. Since Flashbang needs a browser to run, the only way to automate it for
+multiple files is to use a headless browser like <a href="http://phantomjs.org">PhantomJS</a>. So, it was easy to build a
+wrapper script as I know my way around Flashbang.</p>
+<h3>Usage</h3>
+<p>The least amount of time for this whole tool was spent for deciding its name i.e 1 second, hence the misleading
+name. The wrapper script is available at <a href="https://github.com/tunnelshade/flashriot">github.com/tunnelshade/flashriot</a>.
+Some key things on using this tool:</p>
+<ul>
+<li>PhantomJS, Python2 and Flashbang itself are necessary to run this. If you are on OSX, you can install phantomjs
+using homebrew.</li>
+<li>
+<p>Run the shell script using proper arguments.</p>
+<div class="highlight"><pre><span></span>./flashriot.sh ~/workspace/flash-files/ ~/workspace/Flashbang/
+</pre></div>
+
+
+</li>
+<li>
+<p>Keep cheking the window periodically. Even if the script hangs, use <strong>Ctrl+C</strong> and start the script again. Flashriot
+will only run flashbang on unprocessed files.</p>
+</li>
+<li>
+<p>The output for each flash file is written to a text file with the same name. For a vulnerable <strong>ZeroClipboard.swf</strong>, we have
+the following <strong>ZeroClipboard.txt</strong>.</p>
+<div class="highlight"><pre><span></span><span class="o">==</span>&gt; ZeroClipboard.txt &lt;<span class="o">==</span>
+<span class="o">========================</span>
+Detected Flash <span class="nv">variables</span>
+<span class="o">========================</span>
+id:eval
+width
+<span class="nv">height</span>
+<span class="o">========================</span>
+<span class="o">===================</span>
+Detected Sink <span class="nv">calls</span>
+<span class="o">===================</span>
+---------------
+Flash variables
+---------------
+<span class="o">{</span><span class="s2">&quot;id&quot;</span>:<span class="s2">&quot;someDummyPayloadWhichHasToBeThereInOnePiece&quot;</span>,<span class="s2">&quot;width&quot;</span>:<span class="s2">&quot;4232&quot;</span>,<span class="s2">&quot;height&quot;</span>:<span class="s2">&quot;2079&quot;</span><span class="o">}</span>
+----
+Sink
+----
+<span class="nb">eval</span>
+---------
+Sink Data
+---------
+try <span class="o">{</span>__flash__toXML<span class="o">(</span>ZeroClipboard.dispatch<span class="o">(</span><span class="s2">&quot;someDummyPayloadWhichHasToBeThereInOnePiece&quot;</span>,<span class="s2">&quot;load&quot;</span>,null<span class="o">))</span><span class="p">;</span><span class="o">}</span> catch <span class="o">(</span>e<span class="o">)</span> <span class="o">{</span><span class="s2">&quot;&lt;undefined/&gt;&quot;</span><span class="p">;</span><span class="o">}</span>
+------------------
+Replaced Sink Data
+------------------
+try <span class="o">{</span>__flash__toXML<span class="o">(</span>ZeroClipboard.dispatch<span class="o">(</span><span class="s2">&quot;@@@id@@@&quot;</span>,<span class="s2">&quot;load&quot;</span>,null<span class="o">))</span><span class="p">;</span><span class="o">}</span> catch <span class="o">(</span>e<span class="o">)</span> <span class="o">{</span><span class="s2">&quot;&lt;undefined/&gt;&quot;</span><span class="p">;</span><span class="o">}</span>
+-------------------
+Vulnerable variable
+-------------------
+<span class="nv">id</span>
+<span class="o">===================</span>
+</pre></div>
+
+
+</li>
+<li>
+<p>After completion, just skim through the file outputs. I use the following command to see the file specific output.</p>
+<div class="highlight"><pre><span></span>tail -n +1 *.txt
+</pre></div>
+
+
+</li>
+<li>
+<p>Sometimes, it is benificial to see the console output as well. For example from the following console output we can understand that
+some kind of request was done and parsing failed. This mostly happens when a valid xml file is not supplied which might be due to an
+improper path in a flash variable. Flashbang is not yet smart enough to detect a XML file call and fuzz using a XML file. If implemented,
+this will be awesome.</p>
+<div class="highlight"><pre><span></span>Going to fuzz /Users/tunnelshade/workspace/src/github.com/cure53/Flashbang/flash-files/files/tagcloud.swf
+Using url: http://127.0.0.1:9000/tagcloud.swf
+------------ Launching new instance ------------
+SyntaxError in ToXML
+
+  http://127.0.0.1:9001/shumway/src/avm2/xml.js:506 in toXML
+  http://127.0.0.1:9001/shumway/src/avm2/xml.js:717 in ASXML
+  http://127.0.0.1:9001/shumway/src/avm2/xml.js:712 in ASXML
+  http://127.0.0.1:9001/shumway/src/avm2/domain.js:266 in apply
+  http://127.0.0.1:9001/shumway/src/avm2/runtime.js:498 in asCallProperty
+  :7 in fn251
+  http://127.0.0.1:9001/shumway/src/avm2/scope.js:178 in boundMethod
+  http://127.0.0.1:9001/shumway/src/flash/events/EventDispatcher.js:101 in processListeners
+  http://127.0.0.1:9001/shumway/src/flash/events/EventDispatcher.js:79 in doDispatchEvent
+  http://127.0.0.1:9001/shumway/src/flash/events/EventDispatcher.js:252 in dispatchEventFunction
+  http://127.0.0.1:9001/shumway/src/avm2/runtime.js:498 in asCallProperty
+  :13 in EventDispatcher<span class="nv">$$</span>BgdispatchEvent
+  http://127.0.0.1:9001/shumway/src/avm2/runtime.js:498 in asCallProperty
+  :6 in URLLoader<span class="nv">$$</span>G_muXFIonStreamComplete
+  :0 in URLLoader<span class="nv">$$</span>G_muXFIonStreamComplete
+  http://127.0.0.1:9001/shumway/src/flash/events/EventDispatcher.js:133 in processListeners
+  http://127.0.0.1:9001/shumway/src/flash/events/EventDispatcher.js:79 in doDispatchEvent
+  http://127.0.0.1:9001/shumway/src/flash/events/EventDispatcher.js:223 in dispatchEvent
+  http://127.0.0.1:9001/shumway/src/flash/net/URLStream.js:92 in onclose
+  http://127.0.0.1:9001/shumway/examples/inspector/js/classes/BinaryFileReader.js:79 in onreadystatechange
+Done, now proceeding to clean up
+------------ Killing used instance ------------
+------------ Launching new instance ------------
+Done, now proceeding to clean up
+------------ Killing used instance ------------
+------------ Launching new instance ------------
+Done, now proceeding to clean up
+------------ Killing used instance ------------
+</pre></div>
+
+
+</li>
+</ul>
+<h3>Bug Hunters!</h3>
+<ul>
+<li>When bug hunting, search for all flash files for the domains. Either use google dorking (<strong>site: ext:swf</strong>) or
+<a href="https://github.com/tunnelshade/thedumpster">thedumpster</a> to gather all flash file urls.</li>
+<li>Then use <strong>wget</strong> or similar tool to download them into a folder.</li>
+<li>Run <strong>Flashriot</strong> on those files.</li>
+<li><strong>BOOM!!</strong> for any bugs you might find.<div class="highlight"><pre><span></span>$ mkdir hunting<span class="p">;</span> <span class="nb">cd</span> hunting<span class="p">;</span>
+$ python3 thedumpster.py -a <span class="s2">&quot;ext:swf&quot;</span> -o urls.txt swag_seller.com
+$ wget -i urls.txt
+$ sh flashriot.sh ./ ~/workspace/Flashbang
+$ tail -n +1 *.txt
+</pre></div>
+
+
+</li>
+</ul>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tricks" />
+    <meta name="tags" content="hacks" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2013/03/logo-game-hacked/" rel="bookmark"
+         title="Permalink to Facebook games are fun .... to hack!">Facebook games are fun .... to hack!</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="2013-03-26T00:00:00+05:30">
+      [26-03-13]
+    </time>
+
+    [<a href="/category/bugs/">Bugs</a>]
+
+    [tricks,hacks]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    <p>This is about how I learnt about logos with the help of a facebook game named <strong>The Logo Game</strong>.
+During vacation because of extreme boredom in holidays, I finally started to look for some time
+consuming stuff :P. Eventually I stumbled upon Facebook games in particular a game called The Logo Game.</p>
+<p><img src="http://i43.tinypic.com/2wggoht.jpg" class="image-center" alt="Logo Game"/></p>
+<p>The game was really cool (at the beginning). But the awkward thing that I noticed is that,
+if a correct guess was provided it was taking time to respond &amp; for a wrong guess the
+reaction was instantaneous. So, it is reasonable to open tamper data and check for the
+data submits. For a correct solution there was a request being done and for wrong as
+expected no request was taking place. So I started diving into the source code :). What
+caught my attention was ==&gt;</p>
+<p><img src="http://i40.tinypic.com/8yyrrb.jpg" class="image-center" alt="MD5 Salt"/></p>
+<p>md5_salt :o ,  so I could guess what was going in the backend. So it was easy for me to search the remaining js code for relavent part &amp; I found this</p>
+<p><img src="http://i40.tinypic.com/o7rpro.jpg" class="image-center" alt="Guess Function"/></p>
+<p>So I went for logos.CheckGuess</p>
+<p><img src="http://i41.tinypic.com/2co4zlu.jpg" class="image-center" alt="Check Function"/></p>
+<p>Yay!!! We got it, so some hashes were being passed to app, and checking is done in our browser itself (The app was combining the answer with a salt and then hashing it and checking the hash against the existing values ) . So now we have salt and hashes. Are we going to crack it?????
+NO WAY. When I tried to replicate the application's way of communicating with the server through ajax, I got the some data in json format. I tried fuzzing the input parameters and I could get the whole data of logos and hashes ( also those which I don't have access as my score is not so good ). So the data after a bit of <strong>injections</strong> appeared like this =&gt;</p>
+<p><img src="http://i42.tinypic.com/axd8co.jpg" width="100%" class="image-center" alt="Fuzzing result"/></p>
+<p>I just underlined few of the data because almost all the data is important. We have hints, md5 hashes and names of the logos. So I wrote a python script to extract logo names from this trash and the output of my program appeared like =&gt;</p>
+<p><img src="http://i43.tinypic.com/51t4du.jpg" class="image-center" alt="Check Function"/></p>
+<p>Just a snapshot of a part of the output file. So now I have all the logo names in order. The file is available for download <a href="http://www.mediafire.com/view/?wygcjzqi8auyopx">here</a>. Finally there are loads of ways to learn stuff. So I started learning about logos this way.</p>
+<p>P.S - The score that I have in the game is legible and is not obtained through any unfair means :P</p>
+<p>Anyone can download the logos list and verify. Incase of mistakes please let me know as I have to correct my script then :P. Trust me all this was fun rather than the normal game.</p>
+  </div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [3]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/tricks/">tricks</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [11]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/python/">python</a> [2]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>
