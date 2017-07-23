@@ -1,0 +1,20 @@
+{% extends "blog_base.html" %}
+{% block content %}
+<section id="content">
+
+{% block content_title %}
+<div class="pure-g"><div class="pure-u-1">
+  <h3>All posts</h3>
+</div></div>
+{% endblock %}
+
+{% for article in articles_page.object_list %}
+        {% include "article_info.html" %}
+        <br>
+{% endfor %}
+{% if articles_page.has_other_pages() %}
+    {% include 'pagination.html' %}
+{% endif %}
+</section><!-- /#content -->
+
+{% endblock content %}

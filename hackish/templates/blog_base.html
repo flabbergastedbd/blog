@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block imports %}
+  <link rel="stylesheet" href="{{ SITEURL }}/{{ THEME_STATIC_DIR }}/css/blog.css">
+{% endblock %}
+
+{% block subheading %}
+  &raquo; <a href="{{ SITEURL }}/{{ INDEX_SAVE_AS }}">Blog</a> <a href="{{ FEED_DOMAIN }}/{{ FEED_ALL_ATOM }}"><i class="fa fa-rss"></i></a>
+{% endblock %}
+
+{% block frame %}
+  <div class="pure-g">
+    <div class="pure-u-4-5">
+      {% block content %}
+      {% endblock content %}
+    </div>
+    <div class="pure-u-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+        {% for category, articles in categories %}
+          <li><a href="{{ SITE_URL }}/{{ category.url }}">{{ category.name }}</a> [{{ articles|length }}]</li>
+        {% endfor %}
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+        {% for tag, articles in tags %}
+          <li><a href="{{ SITE_URL }}/{{ tag.url }}">{{ tag.name }}</a> [{{ articles|length }}]</li>
+        {% endfor %}
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+      {% include "social.html" %}
+    </div>
+  </div>
+{% endblock frame %}

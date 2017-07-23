@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block frame %}
+
+<div class="pure-u-1">
+  <div class="pure-g">
+    <div class="pure-u-1-24"></div>
+    <div class="pure-u-10-24">
+      <fieldset>
+        <legend><h2><a href="{{ SITEURL }}/{{ INDEX_SAVE_AS }}">Blog</a> <a href="{{ FEED_DOMAIN }}/{{ FEED_ALL_ATOM }}"><i class="fa fa-rss"></i></a></h2></legend>
+        {% with article=articles[0] %}
+          {% include "article_info.html" %}
+        {% endwith %}
+      </fieldset>
+    </div>
+    <div class="pure-u-1-24"></div>
+    <div class="pure-u-10-24">
+      <fieldset>
+        <legend><h2>Social</h2></legend>
+        {% include "social.html" %}
+      </fieldset>
+    </div>
+  </div>
+  <div class="pure-g"><div class="pure-u-1">
+    {{ page.content }}
+  </div></div>
+</div>
+{% endblock %}

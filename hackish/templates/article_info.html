@@ -1,0 +1,18 @@
+<article class="hentry">
+<div class="pure-g"><div class="pure-u-1">
+    <header><h3 class="entry-title">
+        <time class="published" datetime="{{ article.date.isoformat() }}"> [{{ article.locale_date }}] </time>
+        <a href="{{ SITEURL }}/{{ article.url }}" rel="bookmark" title="Permalink to {{ article.title|striptags }}">{{ article.title }}</a>
+        [{{ article.category }}]
+    </h3></header>
+</div></div>
+<div class="pure-g">
+  <div class="pure-u-3-24">
+    {% if article.image %}<img src="{{ article.image }}" class="pure-img">{% endif %}
+  </div>
+  <div class="pure-u-1-24"></div>
+  <div class="pure-u-20-24">
+    <div class="entry-content"> {{ article.summary }} </div><!-- /.entry-content -->
+  </div>
+</div>
+</article>

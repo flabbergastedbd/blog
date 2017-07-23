@@ -1,0 +1,45 @@
+{% extends "blog_base.html" %}
+{% block head %}
+  {{ super() }}
+  {% if article.description %}
+    <meta name="description" content="{{article.description}}" />
+  {% endif %}
+
+  {% for tag in article.tags %}
+    <meta name="tags" content="{{tag}}" />
+  {% endfor %}
+
+{% endblock %}
+
+{% block content %}
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="{{ SITEURL }}/{{ article.url }}" rel="bookmark"
+         title="Permalink to {{ article.title|striptags }}">{{ article.title }}</a></h2>
+  </header>
+  <footer class="post-info">
+
+    <time class="published" datetime="{{ article.date.isoformat() }}">
+      [{{ article.locale_date }}]
+    </time>
+    {% if article.modified %}
+      <time class="modified" datetime="{{ article.modified.isoformat() }}">
+        [{{ article.locale_modified }}]
+      </time>
+    {% endif %}
+
+    [<a href="{{ SITE_URL }}/{{ category.url }}">{{ category.name }}</a>]
+
+    [{{ article.tags|join(',') }}]
+
+  </footer><!-- /.post-info -->
+  <div class="entry-content">
+    {{ article.content }}
+  </div><!-- /.entry-content -->
+</section>
+
+{% if DISQUS_SITENAME %}
+  {% include "disqus_comments.html" %}
+{% endif %}
+{% endblock %}
