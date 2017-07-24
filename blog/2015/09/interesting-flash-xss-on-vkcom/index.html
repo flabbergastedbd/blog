@@ -12,6 +12,7 @@
 
         <!-- CSS -->
         <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" integrity="sha384-b92sF+wDNTHrfEtRaYo+EpcA8FUyHOSXrdxKc9XB9kaaX1rSQAgMevW6cYeE5Bdv" crossorigin="anonymous">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
         <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
         <!-- End CSS -->
@@ -42,14 +43,14 @@
       </div>
       <div class="pure-g">
   <div class="pure-g">
-    <div class="pure-u-4-5">
+    <div class="pure-u-1 pure-u-md-4-5 pure-u-lg-4-5">
 <section id="content" class="body">
-  <header>
+  <header class="pure-g"><div class="pure-u-1">
     <h2 class="entry-title">
       <a href="http://tunnelshade.in/blog/2015/09/interesting-flash-xss-on-vkcom/" rel="bookmark"
          title="Permalink to Interesting flash xss on vk.com">Interesting flash xss on vk.com</a></h2>
-  </header>
-  <footer class="post-info">
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
 
     <time class="published" datetime="2015-09-30T00:00:00+05:30">
       [30-09-15]
@@ -59,8 +60,8 @@
 
     [info]
 
-  </footer><!-- /.post-info -->
-  <div class="entry-content">
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
     <p>Every time I try a bug bounty program on <strong>HackerOne</strong>, I first check for flash files on the domains which are in scope. Flash files are always
 a good target as far as I am concerned. Approximately three months back, I came across <strong>VK.com</strong> bug bounty. So, when I searched for flash files
 I came across one file named <strong>photo_uploader_lite.swf</strong>. So, I opened the file in my browser and the file got downloaded instead of getting played
@@ -286,7 +287,7 @@ So, when I opened the url in IE, KABOOOOM!!! It sniffed the content type and pla
 <p>A different payload is in the image</p>
 <p><img alt="vk.com Flash XSS" src="https://i.imgur.com/wBhOE51.png?1"></p>
 <p><strong>HackerOne Report is present <a href="https://hackerone.com/reports/66121">here</a></strong> (Not public at the time of writing)</p>
-  </div><!-- /.entry-content -->
+  </div></div><!-- /.entry-content -->
 </section>
 
 <div id="disqus_thread"></div>
@@ -309,7 +310,7 @@ s.setAttribute('data-timestamp', +new Date());
 })();
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
-    <div class="pure-u-1-5 blog_sidebar">
+    <div class="pure-u-1 pure-u-md-1-5 pure-u-lg-1-5 blog_sidebar">
       <strong>Categories</strong>
       <ul>
           <li><a href="/category/bugs/">Bugs</a> [6]</li>
@@ -339,10 +340,10 @@ s.setAttribute('data-timestamp', +new Date());
 
       <strong>Author</strong>
 <ul class="no_bullets">
-    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
-    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
-    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
-    <li><a class="no_underline" href="name.surname@gmail.com"><i class="fa fa-envelope"></i> name.surname@gmail.com</a></li>
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_">@tunnelshade_ <i class="fa fa-twitter"></i></a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade">Github <i class="fa fa-github"></i></a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/">Linked<i class="fa fa-linkedin"></i></a></li>
+    <li><a class="no_underline" href="domain@gmail.com">domain@gmail.com <i class="fa fa-envelope"></i></a></li>
 </ul>
     </div>
   </div>
