@@ -25,10 +25,10 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
          ('You can modify those links in your config file', '#'),)
 
 # Social widget
-SOCIAL = (('@tunnelshade_ <i class="fa fa-twitter"></i>', 'https://twitter.com/tunnelshade_'),
-          ('Github <i class="fa fa-github"></i>', 'https://github.com/tunnelshade'),
-          ('Linked<i class="fa fa-linkedin"></i>', 'https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/'),
-          ('domain@gmail.com <i class="fa fa-envelope"></i>', 'domain@gmail.com'),)
+SOCIAL = (('<i class="fa fa-twitter"></i> @tunnelshade_', 'https://twitter.com/tunnelshade_'),
+          ('<i class="fa fa-github"></i> Github', 'https://github.com/tunnelshade'),
+          ('<i class="fa fa-linkedin"></i> LinkedIn', 'https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/'),
+          ('<i class="fa fa-envelope"></i> domain@gmail.com', 'domain@gmail.com'),)
 
 DEFAULT_PAGINATION = 5
 PAGINATION_PATTERNS = (
