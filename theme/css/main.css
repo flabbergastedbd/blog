@@ -10,8 +10,8 @@ html, button, input, select, textarea,
 }
 
 body {
-  background-color: #213845;
-  color: #d6e3eb;
+  background-color: #333333;
+  color: #eeeeee;
 }
 
 img
@@ -29,24 +29,26 @@ img
 }
 
 a:link {
-  color: #ffffff;
+  color: #8db2e5;
 }
 
 a:visited {
-  color: #f1f6f8;
+  color: #8db2e5;
+}
+
+a:hover {
+  color: #fe8255;
 }
 
 /* Title Links */
-h1 {
-  font-family: "Nova Square", cursive;
-}
-
 a.no_underline {
   text-decoration: none;
 }
 
 h1 a {
-  .no_underline;
+  font-family: "Nova Square", cursive;
+  text-decoration: none;
+  color: #ffffff;
 }
 
 /* Page titles */
