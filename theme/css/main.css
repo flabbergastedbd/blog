@@ -6,12 +6,12 @@
 html, button, input, select, textarea,
 .pure-g [class *= "pure-u"] {
   /* Set your content font stack here: */
-  font-family: 'Lucida Grande', "Verdana", sans-serif;
+  font-family: 'Open Sans', 'Verdana', sans-serif;
 }
 
 body {
   background-color: #213845;
-  color: #bad1de;
+  color: #d6e3eb;
 }
 
 img
@@ -68,4 +68,8 @@ ul {
 
 p {
   text-align: justify;
+}
+
+li {
+  margin: 0.5em 0;
 }
