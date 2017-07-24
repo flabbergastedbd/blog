@@ -13,12 +13,12 @@
 
 {% block content %}
 <section id="content" class="body">
-  <header>
+  <header class="pure-g"><div class="pure-u-1">
     <h2 class="entry-title">
       <a href="{{ SITEURL }}/{{ article.url }}" rel="bookmark"
          title="Permalink to {{ article.title|striptags }}">{{ article.title }}</a></h2>
-  </header>
-  <footer class="post-info">
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
 
     <time class="published" datetime="{{ article.date.isoformat() }}">
       [{{ article.locale_date }}]
@@ -33,10 +33,10 @@
 
     [{{ article.tags|join(',') }}]
 
-  </footer><!-- /.post-info -->
-  <div class="entry-content">
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
     {{ article.content }}
-  </div><!-- /.entry-content -->
+  </div></div><!-- /.entry-content -->
 </section>
 
 {% if DISQUS_SITENAME %}

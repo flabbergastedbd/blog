@@ -11,12 +11,11 @@ html, button, input, select, textarea,
 
 body {
   background-color: #213845;
-  color: #9fbed1;
+  color: #bad1de;
 }
 
 img
 {
-  .pure-img;
   display: block;
   height: auto;
   max-width: 100%;
