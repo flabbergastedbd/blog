@@ -6,12 +6,17 @@
 html, button, input, select, textarea,
 .pure-g [class *= "pure-u"] {
   /* Set your content font stack here: */
-  font-family: 'Open Sans', 'Verdana', sans-serif;
+  font-family: 'Tahoma';
 }
 
 body {
   background-color: #333333;
   color: #eeeeee;
+}
+
+section#content {
+  padding: 5px 15px;
+  background-color: #292929;
 }
 
 img
