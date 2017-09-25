@@ -1,11 +1,12 @@
 .highlight pre {
-	width: 100%;
+  width: 100%;
   background-color: #272822;
-	padding: 0;
-	margin: 0;
-	overflow: auto;
-	overflow-y: hidden;
-	border: 10px solid #272822;
+  font-size: 15px;
+  padding: 0;
+  margin: 0;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  border: 10px solid #272822;
 }
 .highlight .hll { background-color: #272822; }
 .highlight .c { color: #75715e } /* Comment */
