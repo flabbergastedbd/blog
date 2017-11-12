@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="tricks" />
+    <meta name="tags" content="info" />
+    <meta name="tags" content="python" />
+    <meta name="tags" content="reversing" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" integrity="sha384-b92sF+wDNTHrfEtRaYo+EpcA8FUyHOSXrdxKc9XB9kaaX1rSQAgMevW6cYeE5Bdv" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-4-5 pure-u-lg-4-5">
+<section id="content" class="body">
+  <header class="pure-g"><div class="pure-u-1">
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2017/11/playing-with-python-pex/" rel="bookmark"
+         title="Permalink to Playing with python PEX files">Playing with python PEX files</a></h2>
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
+
+    <time class="published" datetime="2017-11-12T00:00:00+05:30">
+      [12-11-17]
+    </time>
+
+    [<a href="/category/python/">Python</a>]
+
+    [tricks,info,python,reversing]
+
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
+    <div class="section" id="introduction">
+<h2>Introduction</h2>
+<p>Recently I have been coming across lots of <strong>P</strong>ython <strong>EX</strong>ecutables. This seems to be a popular way of distributing
+python programs along with their dependencies. All that is necessary is a compatible python runtime. A very quick and a bit
+outdated <a class="reference external" href="http://www.youtube.com/watch?v=NmpnGhRwsu0">WTF is PEX?</a>. In most cases the dependencies of a python program are packaged
+into the pex for reasons stated above.</p>
+</div>
+<div class="section" id="objectives">
+<h2>Objectives</h2>
+<p>I had two very rigid objectives when dealing with pex files</p>
+<ul class="simple">
+<li>See the source code of the main package or script along with its dependencies.</li>
+<li>Have the ability to mess around with the existing code and run it without having to setup requirements etc..</li>
+</ul>
+</div>
+<div class="section" id="playground">
+<h2>Playground</h2>
+<p><strong>coverage</strong> console script is something that I frequently use, so let us create a coverage clone and understand the unpacking of a pex.
+Create a virtualenv and install pex in it. To create a pex that works like coverage:</p>
+<pre class="literal-block">
+pex pex coverage -c coverage -o coverage.pex
+</pre>
+<p><cite>pex</cite> &amp; <cite>coverage</cite> are dependencies to be included, <cite>-c</cite> states the console script to be used as entrypoint and <cite>-o</cite> states the output file name.
+The craziest part is this command will work even if you do not have coverage installed, that is because pex gets it and packages it. Now try:</p>
+<pre class="literal-block">
+./coverage.pex --help
+</pre>
+<p>Fancy right.</p>
+</div>
+<div class="section" id="unpacking">
+<h2>Unpacking</h2>
+<p>PEX files are zip files with a python hashbang at the beginning. Don't believe me??</p>
+<div class="highlight"><pre><span></span><span class="go">00000000  23 21 2f 75 73 72 2f 62  69 6e 2f 65 6e 76 20 70  |#!/usr/bin/env p|</span>
+<span class="go">00000010  79 74 68 6f 6e 32 2e 37  0a 50 4b 03 04 14 00 00  |ython2.7.PK.....|</span>
+<span class="go">00000020  00 08 00 55 82 6c 4b 7b  66 ca fb 78 00 00 00 83  |...U.lK{f..x....|</span>
+<span class="go">00000030  00 00 00 1b 00 00 00 2e  62 6f 6f 74 73 74 72 61  |........bootstra|</span>
+<span class="go">00000040</span>
+</pre></div>
+<p>So, let us unzip the pex and see the file structure (Some files and folders are removed for brevity)</p>
+<div class="highlight"><pre><span></span><span class="go">├── .bootstrap</span>
+<span class="go">│   ├── _pex</span>
+<span class="go">│   └── pkg_resources</span>
+<span class="go">├── coverage.pex</span>
+<span class="go">├── .deps</span>
+<span class="go">│   ├── coverage-4.4.2-cp27-cp27mu-linux_x86_64.whl</span>
+<span class="go">│   │   ├── coverage</span>
+<span class="go">│   │   └── coverage-4.4.2.dist-info</span>
+<span class="go">│   ├── pex-1.2.13-py2.py3-none-any.whl</span>
+<span class="go">│   │   ├── pex</span>
+<span class="go">│   │   └── pex-1.2.13.dist-info</span>
+<span class="go">│   ├── setuptools-33.1.1-py2.py3-none-any.whl</span>
+<span class="go">│   │   ├── easy_install.py</span>
+<span class="go">│   │   ├── pkg_resources</span>
+<span class="go">│   │   ├── setuptools</span>
+<span class="go">│   │   └── setuptools-33.1.1.dist-info</span>
+<span class="go">│   └── wheel-0.29.0-py2.py3-none-any.whl</span>
+<span class="go">│       ├── wheel</span>
+<span class="go">│       └── wheel-0.29.0.dist-info</span>
+<span class="go">├── hello.py</span>
+<span class="go">├── __main__.py</span>
+<span class="go">└─ PEX-INFO</span>
+</pre></div>
+<p>So, it can be easily understood that</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">dir/file</th>
+<th class="head">contents</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>.bootstrap</td>
+<td>Bootstrapping scripts to setup environment and launch the entrypoint.</td>
+</tr>
+<tr><td>.deps</td>
+<td>whls of dependencies.</td>
+</tr>
+<tr><td>PEX-INFO</td>
+<td>Name says so.</td>
+</tr>
+<tr><td>__main__.py</td>
+<td>Entrypoint for the archive as specified by python spec.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PEX-INFO</strong> looks like</p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;always_write_cache&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="nt">&quot;build_properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;CPython&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;platform&quot;</span><span class="p">:</span> <span class="s2">&quot;linux-x86_64&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;version&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="mi">2</span><span class="p">,</span>
+      <span class="mi">7</span><span class="p">,</span>
+      <span class="mi">12</span>
+    <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;code_hash&quot;</span><span class="p">:</span> <span class="s2">&quot;da39a3ee5e6b4b0d3255bfef95601890afd80709&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;distributions&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;coverage-4.4.2-cp27-cp27mu-linux_x86_64.whl&quot;</span><span class="p">:</span> <span class="s2">&quot;bfb4e061b724fe9a50c2cf048c8d35d10a664728&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;pex-1.2.13-py2.py3-none-any.whl&quot;</span><span class="p">:</span> <span class="s2">&quot;6bfeb70d4c4280954ddc331c1f3a49cad35a567d&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;setuptools-33.1.1-py2.py3-none-any.whl&quot;</span><span class="p">:</span> <span class="s2">&quot;d5c7021b0a2ca18f60b7dd7a5b9ffebcb789d43b&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;wheel-0.29.0-py2.py3-none-any.whl&quot;</span><span class="p">:</span> <span class="s2">&quot;c6b9e44d951cdabf4dc67205b0f30184a1b602bb&quot;</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;entry_point&quot;</span><span class="p">:</span> <span class="s2">&quot;coverage.cmdline:main&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;ignore_errors&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="nt">&quot;inherit_path&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="nt">&quot;pex_path&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
+  <span class="nt">&quot;requirements&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;wheel==0.29.0&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pex==1.2.13&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;setuptools==33.1.1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;coverage==4.4.2&quot;</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;zip_safe&quot;</span><span class="p">:</span> <span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+<p>and <strong>__main__.py</strong> like this</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">__entry_point__</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="k">if</span> <span class="s1">&#39;__file__&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span> <span class="ow">and</span> <span class="vm">__file__</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+  <span class="n">__entry_point__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="k">elif</span> <span class="s1">&#39;__loader__&#39;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+  <span class="kn">from</span> <span class="nn">zipimport</span> <span class="kn">import</span> <span class="n">zipimporter</span>
+  <span class="kn">from</span> <span class="nn">pkgutil</span> <span class="kn">import</span> <span class="n">ImpLoader</span>
+  <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">__loader__</span><span class="p">,</span> <span class="s1">&#39;archive&#39;</span><span class="p">):</span>
+    <span class="n">__entry_point__</span> <span class="o">=</span> <span class="n">__loader__</span><span class="o">.</span><span class="n">archive</span>
+  <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">__loader__</span><span class="p">,</span> <span class="n">ImpLoader</span><span class="p">):</span>
+    <span class="n">__entry_point__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__loader__</span><span class="o">.</span><span class="n">get_filename</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="n">__entry_point__</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+  <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Could not launch python executable!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+  <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__entry_point__</span><span class="p">,</span> <span class="s1">&#39;.bootstrap&#39;</span><span class="p">)))</span>
+
+<span class="kn">from</span> <span class="nn">_pex.pex_bootstrapper</span> <span class="kn">import</span> <span class="n">bootstrap_pex</span>
+<span class="n">bootstrap_pex</span><span class="p">(</span><span class="n">__entry_point__</span><span class="p">)</span>
+</pre></div>
+</td></tr></table><p>If you try running the <strong>__main__</strong> file directly, a error will popup.</p>
+</div>
+<div class="section" id="executing">
+<h2>Executing</h2>
+<p>The last two lines of the main script when modified to launch an environment of the executable, the console script can
+be invoked as necessary. i.e</p>
+<div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">from _pex.pex_bootstrapper import bootstrap_pex</span>
+<span class="sd">bootstrap_pex(__entry_point__)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Call bootstrap_pex_env to set up the required environment</span>
+<span class="kn">from</span> <span class="nn">_pex.pex_bootstrapper</span> <span class="kn">import</span> <span class="n">bootstrap_pex_env</span>
+<span class="n">bootstrap_pex_env</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+<span class="c1"># Call the entry point as you please. In case of coverage entry</span>
+<span class="c1"># point is coverage.cmdline:main()</span>
+<span class="kn">from</span> <span class="nn">coverage.cmdline</span> <span class="kn">import</span> <span class="n">main</span>
+<span class="n">main</span><span class="p">()</span>
+</pre></div>
+<p>With the modified file, try</p>
+<div class="highlight"><pre><span></span><span class="gp">$</span> python __main__.py --help
+
+<span class="go">Coverage.py, version 4.4.2 with C extension</span>
+<span class="go">Measure, collect, and report on code coverage in Python programs.</span>
+
+<span class="go">usage: __main__.py &lt;command&gt; [options] [args]</span>
+
+<span class="go">Commands:</span>
+<span class="go">    annotate    Annotate source files with execution information.</span>
+<span class="go">    combine     Combine a number of data files.</span>
+<span class="go">    erase       Erase previously collected coverage data.</span>
+<span class="go">    help        Get help on using coverage.py.</span>
+<span class="go">    html        Create an HTML report.</span>
+<span class="go">    report      Report coverage stats on modules.</span>
+<span class="go">    run         Run a Python program and measure code execution.</span>
+<span class="go">    xml         Create an XML report of coverage results.</span>
+
+<span class="go">Use &quot;__main__.py help &lt;command&gt;&quot; for detailed help on any command.</span>
+<span class="go">For full documentation, see https://coverage.readthedocs.io</span>
+</pre></div>
+<p>Now, we are free to edit the main program or any dependencies in <strong>.deps</strong> as we please
+and test it. (Try removing *.pyc if your changes are not reflected)</p>
+</div>
+<div class="section" id="recap">
+<h2>Recap</h2>
+<ol class="arabic simple">
+<li>Unzip the pex.</li>
+<li>Edit the <tt class="docutils literal">__main__.py</tt> to call <tt class="docutils literal"><span class="pre">bootstrap_pex_env(&quot;.&quot;)</span></tt>.</li>
+<li>Call the whichever entrypoint you wish.</li>
+</ol>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Make sure that the python version you are trying to run the <tt class="docutils literal">__main__.py</tt> is compatible according to <tt class="docutils literal"><span class="pre">PEX-INFO</span></tt>.</p>
+</div>
+</div>
+
+  </div></div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1 pure-u-md-1-5 pure-u-lg-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [4]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/info/">info</a> [12]</li>
+          <li><a href="/tag/reversing/">reversing</a> [1]</li>
+          <li><a href="/tag/tricks/">tricks</a> [11]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/python/">python</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="domain@gmail.com"><i class="fa fa-envelope"></i> domain@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>

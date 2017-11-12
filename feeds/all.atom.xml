@@ -1,5 +1,232 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="http://tunnelshade.in/" rel="alternate"></link><link href="http://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>http://tunnelshade.in/</id><updated>2017-07-20T00:00:00+05:30</updated><entry><title>Configuring bspwm for my setup</title><link href="http://tunnelshade.in/blog/2017/07/configuring-bspwm/" rel="alternate"></link><published>2017-07-20T00:00:00+05:30</published><updated>2017-07-20T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2017-07-20:/blog/2017/07/configuring-bspwm/</id><summary type="html">&lt;p&gt;After about few months with i3, I stumbled upon &lt;a href="https://github.com/Airblader/i3"&gt;i3gaps&lt;/a&gt; in my quest for some space between the tiling
+<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="http://tunnelshade.in/" rel="alternate"></link><link href="http://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>http://tunnelshade.in/</id><updated>2017-11-12T00:00:00+05:30</updated><entry><title>Playing with python PEX files</title><link href="http://tunnelshade.in/blog/2017/11/playing-with-python-pex/" rel="alternate"></link><published>2017-11-12T00:00:00+05:30</published><updated>2017-11-12T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2017-11-12:/blog/2017/11/playing-with-python-pex/</id><summary type="html">&lt;div class="section" id="introduction"&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;Recently I have been coming across lots of &lt;strong&gt;P&lt;/strong&gt;ython &lt;strong&gt;EX&lt;/strong&gt;ecutables. This seems to be a popular way of distributing
+python programs along with their dependencies. All that is necessary is a compatible python runtime. A very quick and a bit
+outdated &lt;a class="reference external" href="http://www.youtube.com/watch?v=NmpnGhRwsu0"&gt;WTF is PEX?&lt;/a&gt;. In most cases …&lt;/p&gt;&lt;/div&gt;</summary><content type="html">&lt;div class="section" id="introduction"&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;Recently I have been coming across lots of &lt;strong&gt;P&lt;/strong&gt;ython &lt;strong&gt;EX&lt;/strong&gt;ecutables. This seems to be a popular way of distributing
+python programs along with their dependencies. All that is necessary is a compatible python runtime. A very quick and a bit
+outdated &lt;a class="reference external" href="http://www.youtube.com/watch?v=NmpnGhRwsu0"&gt;WTF is PEX?&lt;/a&gt;. In most cases the dependencies of a python program are packaged
+into the pex for reasons stated above.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="objectives"&gt;
+&lt;h2&gt;Objectives&lt;/h2&gt;
+&lt;p&gt;I had two very rigid objectives when dealing with pex files&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;See the source code of the main package or script along with its dependencies.&lt;/li&gt;
+&lt;li&gt;Have the ability to mess around with the existing code and run it without having to setup requirements etc..&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="playground"&gt;
+&lt;h2&gt;Playground&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;coverage&lt;/strong&gt; console script is something that I frequently use, so let us create a coverage clone and understand the unpacking of a pex.
+Create a virtualenv and install pex in it. To create a pex that works like coverage:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+pex pex coverage -c coverage -o coverage.pex
+&lt;/pre&gt;
+&lt;p&gt;&lt;cite&gt;pex&lt;/cite&gt; &amp;amp; &lt;cite&gt;coverage&lt;/cite&gt; are dependencies to be included, &lt;cite&gt;-c&lt;/cite&gt; states the console script to be used as entrypoint and &lt;cite&gt;-o&lt;/cite&gt; states the output file name.
+The craziest part is this command will work even if you do not have coverage installed, that is because pex gets it and packages it. Now try:&lt;/p&gt;
+&lt;pre class="literal-block"&gt;
+./coverage.pex --help
+&lt;/pre&gt;
+&lt;p&gt;Fancy right.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="unpacking"&gt;
+&lt;h2&gt;Unpacking&lt;/h2&gt;
+&lt;p&gt;PEX files are zip files with a python hashbang at the beginning. Don't believe me??&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="go"&gt;00000000  23 21 2f 75 73 72 2f 62  69 6e 2f 65 6e 76 20 70  |#!/usr/bin/env p|&lt;/span&gt;
+&lt;span class="go"&gt;00000010  79 74 68 6f 6e 32 2e 37  0a 50 4b 03 04 14 00 00  |ython2.7.PK.....|&lt;/span&gt;
+&lt;span class="go"&gt;00000020  00 08 00 55 82 6c 4b 7b  66 ca fb 78 00 00 00 83  |...U.lK{f..x....|&lt;/span&gt;
+&lt;span class="go"&gt;00000030  00 00 00 1b 00 00 00 2e  62 6f 6f 74 73 74 72 61  |........bootstra|&lt;/span&gt;
+&lt;span class="go"&gt;00000040&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So, let us unzip the pex and see the file structure (Some files and folders are removed for brevity)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="go"&gt;├── .bootstrap&lt;/span&gt;
+&lt;span class="go"&gt;│   ├── _pex&lt;/span&gt;
+&lt;span class="go"&gt;│   └── pkg_resources&lt;/span&gt;
+&lt;span class="go"&gt;├── coverage.pex&lt;/span&gt;
+&lt;span class="go"&gt;├── .deps&lt;/span&gt;
+&lt;span class="go"&gt;│   ├── coverage-4.4.2-cp27-cp27mu-linux_x86_64.whl&lt;/span&gt;
+&lt;span class="go"&gt;│   │   ├── coverage&lt;/span&gt;
+&lt;span class="go"&gt;│   │   └── coverage-4.4.2.dist-info&lt;/span&gt;
+&lt;span class="go"&gt;│   ├── pex-1.2.13-py2.py3-none-any.whl&lt;/span&gt;
+&lt;span class="go"&gt;│   │   ├── pex&lt;/span&gt;
+&lt;span class="go"&gt;│   │   └── pex-1.2.13.dist-info&lt;/span&gt;
+&lt;span class="go"&gt;│   ├── setuptools-33.1.1-py2.py3-none-any.whl&lt;/span&gt;
+&lt;span class="go"&gt;│   │   ├── easy_install.py&lt;/span&gt;
+&lt;span class="go"&gt;│   │   ├── pkg_resources&lt;/span&gt;
+&lt;span class="go"&gt;│   │   ├── setuptools&lt;/span&gt;
+&lt;span class="go"&gt;│   │   └── setuptools-33.1.1.dist-info&lt;/span&gt;
+&lt;span class="go"&gt;│   └── wheel-0.29.0-py2.py3-none-any.whl&lt;/span&gt;
+&lt;span class="go"&gt;│       ├── wheel&lt;/span&gt;
+&lt;span class="go"&gt;│       └── wheel-0.29.0.dist-info&lt;/span&gt;
+&lt;span class="go"&gt;├── hello.py&lt;/span&gt;
+&lt;span class="go"&gt;├── __main__.py&lt;/span&gt;
+&lt;span class="go"&gt;└─ PEX-INFO&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So, it can be easily understood that&lt;/p&gt;
+&lt;table border="1" class="docutils"&gt;
+&lt;colgroup&gt;
+&lt;col width="16%" /&gt;
+&lt;col width="84%" /&gt;
+&lt;/colgroup&gt;
+&lt;thead valign="bottom"&gt;
+&lt;tr&gt;&lt;th class="head"&gt;dir/file&lt;/th&gt;
+&lt;th class="head"&gt;contents&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody valign="top"&gt;
+&lt;tr&gt;&lt;td&gt;.bootstrap&lt;/td&gt;
+&lt;td&gt;Bootstrapping scripts to setup environment and launch the entrypoint.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;.deps&lt;/td&gt;
+&lt;td&gt;whls of dependencies.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;PEX-INFO&lt;/td&gt;
+&lt;td&gt;Name says so.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;__main__.py&lt;/td&gt;
+&lt;td&gt;Entrypoint for the archive as specified by python spec.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;PEX-INFO&lt;/strong&gt; looks like&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;always_write_cache&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;build_properties&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;class&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;CPython&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;platform&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;linux-x86_64&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;version&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+      &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="mi"&gt;12&lt;/span&gt;
+    &lt;span class="p"&gt;]&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;code_hash&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;da39a3ee5e6b4b0d3255bfef95601890afd80709&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;distributions&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;coverage-4.4.2-cp27-cp27mu-linux_x86_64.whl&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;bfb4e061b724fe9a50c2cf048c8d35d10a664728&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;pex-1.2.13-py2.py3-none-any.whl&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;6bfeb70d4c4280954ddc331c1f3a49cad35a567d&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;setuptools-33.1.1-py2.py3-none-any.whl&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;d5c7021b0a2ca18f60b7dd7a5b9ffebcb789d43b&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;quot;wheel-0.29.0-py2.py3-none-any.whl&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;c6b9e44d951cdabf4dc67205b0f30184a1b602bb&amp;quot;&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;entry_point&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;coverage.cmdline:main&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;ignore_errors&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;inherit_path&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;pex_path&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;requirements&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="s2"&gt;&amp;quot;wheel==0.29.0&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s2"&gt;&amp;quot;pex==1.2.13&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s2"&gt;&amp;quot;setuptools==33.1.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s2"&gt;&amp;quot;coverage==4.4.2&amp;quot;&lt;/span&gt;
+  &lt;span class="p"&gt;],&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;quot;zip_safe&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and &lt;strong&gt;__main__.py&lt;/strong&gt; like this&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt; 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="n"&gt;__entry_point__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__file__&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;locals&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="vm"&gt;__file__&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="n"&gt;__entry_point__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="vm"&gt;__file__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__loader__&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;locals&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+  &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;zipimport&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;zipimporter&lt;/span&gt;
+  &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pkgutil&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;ImpLoader&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;hasattr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__loader__&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;archive&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;__entry_point__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;__loader__&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;archive&lt;/span&gt;
+  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="nb"&gt;isinstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__loader__&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ImpLoader&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;__entry_point__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__loader__&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_filename&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__entry_point__&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+  &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;stderr&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Could not launch python executable!&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;abspath&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;insert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;abspath&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__entry_point__&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;.bootstrap&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;_pex.pex_bootstrapper&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;bootstrap_pex&lt;/span&gt;
+&lt;span class="n"&gt;bootstrap_pex&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__entry_point__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;If you try running the &lt;strong&gt;__main__&lt;/strong&gt; file directly, a error will popup.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="executing"&gt;
+&lt;h2&gt;Executing&lt;/h2&gt;
+&lt;p&gt;The last two lines of the main script when modified to launch an environment of the executable, the console script can
+be invoked as necessary. i.e&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="sd"&gt;from _pex.pex_bootstrapper import bootstrap_pex&lt;/span&gt;
+&lt;span class="sd"&gt;bootstrap_pex(__entry_point__)&lt;/span&gt;
+&lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Call bootstrap_pex_env to set up the required environment&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;_pex.pex_bootstrapper&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;bootstrap_pex_env&lt;/span&gt;
+&lt;span class="n"&gt;bootstrap_pex_env&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Call the entry point as you please. In case of coverage entry&lt;/span&gt;
+&lt;span class="c1"&gt;# point is coverage.cmdline:main()&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;coverage.cmdline&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;
+&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With the modified file, try&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;$&lt;/span&gt; python __main__.py --help
+
+&lt;span class="go"&gt;Coverage.py, version 4.4.2 with C extension&lt;/span&gt;
+&lt;span class="go"&gt;Measure, collect, and report on code coverage in Python programs.&lt;/span&gt;
+
+&lt;span class="go"&gt;usage: __main__.py &amp;lt;command&amp;gt; [options] [args]&lt;/span&gt;
+
+&lt;span class="go"&gt;Commands:&lt;/span&gt;
+&lt;span class="go"&gt;    annotate    Annotate source files with execution information.&lt;/span&gt;
+&lt;span class="go"&gt;    combine     Combine a number of data files.&lt;/span&gt;
+&lt;span class="go"&gt;    erase       Erase previously collected coverage data.&lt;/span&gt;
+&lt;span class="go"&gt;    help        Get help on using coverage.py.&lt;/span&gt;
+&lt;span class="go"&gt;    html        Create an HTML report.&lt;/span&gt;
+&lt;span class="go"&gt;    report      Report coverage stats on modules.&lt;/span&gt;
+&lt;span class="go"&gt;    run         Run a Python program and measure code execution.&lt;/span&gt;
+&lt;span class="go"&gt;    xml         Create an XML report of coverage results.&lt;/span&gt;
+
+&lt;span class="go"&gt;Use &amp;quot;__main__.py help &amp;lt;command&amp;gt;&amp;quot; for detailed help on any command.&lt;/span&gt;
+&lt;span class="go"&gt;For full documentation, see https://coverage.readthedocs.io&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now, we are free to edit the main program or any dependencies in &lt;strong&gt;.deps&lt;/strong&gt; as we please
+and test it. (Try removing *.pyc if your changes are not reflected)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="recap"&gt;
+&lt;h2&gt;Recap&lt;/h2&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Unzip the pex.&lt;/li&gt;
+&lt;li&gt;Edit the &lt;tt class="docutils literal"&gt;__main__.py&lt;/tt&gt; to call &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;bootstrap_pex_env(&amp;quot;.&amp;quot;)&lt;/span&gt;&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;Call the whichever entrypoint you wish.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="admonition warning"&gt;
+&lt;p class="first admonition-title"&gt;Warning&lt;/p&gt;
+&lt;p class="last"&gt;Make sure that the python version you are trying to run the &lt;tt class="docutils literal"&gt;__main__.py&lt;/tt&gt; is compatible according to &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;PEX-INFO&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</content><category term="tricks"></category><category term="info"></category><category term="python"></category><category term="reversing"></category></entry><entry><title>Configuring bspwm for my setup</title><link href="http://tunnelshade.in/blog/2017/07/configuring-bspwm/" rel="alternate"></link><published>2017-07-20T00:00:00+05:30</published><updated>2017-07-20T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2017-07-20:/blog/2017/07/configuring-bspwm/</id><summary type="html">&lt;p&gt;After about few months with i3, I stumbled upon &lt;a href="https://github.com/Airblader/i3"&gt;i3gaps&lt;/a&gt; in my quest for some space between the tiling
 windows. If you haven't heard or used i3 like window manager, you might prefer &lt;a href="http://tunnelshade.in/blog/2014/05/making-i3-beautiful/"&gt;using it first&lt;/a&gt;.
 Soon, I started seeing awesome configurations of &lt;a href="https://www.herbstluftwm.org/index.html"&gt;herbstluftwm&lt;/a&gt; and &lt;a href="https://github.com/baskerville/bspwm"&gt;bspwm&lt;/a&gt;.
 Out of these two …&lt;/p&gt;</summary><content type="html">&lt;p&gt;After about few months with i3, I stumbled upon &lt;a href="https://github.com/Airblader/i3"&gt;i3gaps&lt;/a&gt; in my quest for some space between the tiling
