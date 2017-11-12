@@ -9,6 +9,10 @@ html, button, input, select, textarea,
   font-family: 'Tahoma';
 }
 
+p {
+  letter-spacing: 1px;
+}
+
 body {
   background-color: #333333;
   color: #eeeeee;
