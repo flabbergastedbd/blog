@@ -1,16 +1,14 @@
 @import url('https://fonts.googleapis.com/css?family=Nova+Square');
 @import url('https://fonts.googleapis.com/css?family=Electrolize');
+@import url('https://fonts.googleapis.com/css?family=Roboto');
 @import url('monokai.css');
 
 
 html, button, input, select, textarea,
 .pure-g [class *= "pure-u"] {
   /* Set your content font stack here: */
-  font-family: 'Tahoma';
-}
-
-p {
-  letter-spacing: 1px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 105%;
 }
 
 body {
@@ -83,4 +81,16 @@ p {
 
 li {
   margin: 0.5em 0;
+}
+
+pre {
+  font-family: 'monospace', sans-serif;
+  font-size: 90%;
+}
+
+tt {
+  font-family: 'monospace', sans-serif;
+  background-color: #555555;
+  border-radius: 5px;
+  border: 2px;
 }
