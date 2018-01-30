@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="http://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="fuzzing" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" integrity="sha384-b92sF+wDNTHrfEtRaYo+EpcA8FUyHOSXrdxKc9XB9kaaX1rSQAgMevW6cYeE5Bdv" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="http://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="http://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="http://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="http://tunnelshade.in/blog/index.html">Blog</a> <a href="http://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-4-5 pure-u-lg-4-5">
+<section id="content" class="body">
+  <header class="pure-g"><div class="pure-u-1">
+    <h2 class="entry-title">
+      <a href="http://tunnelshade.in/blog/2018/01/afl-internals-compile-time-instrumentation/" rel="bookmark"
+         title="Permalink to Internals of AFL fuzzer - Compile Time Instrumentation">Internals of AFL fuzzer - Compile Time Instrumentation</a></h2>
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
+
+    <time class="published" datetime="2018-01-31T00:00:00+05:30">
+      [31-01-18]
+    </time>
+
+    [<a href="/category/c/">C</a>]
+
+    [fuzzing]
+
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
+    <div class="section" id="introduction">
+<h2>Introduction</h2>
+<p>If you need an introduction to <a class="reference external" href="http://lcamtuf.coredump.cx/afl/">AFL</a>, you have probably missed out a lot in the instrumented binary fuzzing saga
+for the past couple of years. <strong>afl-fuzz</strong>(fuzzer part of this toolset) is extremely fast, easy to use and requires minimal configuration.
+Technical details of AFL are available <a class="reference external" href="http://lcamtuf.coredump.cx/afl/technical_details.txt">here</a>. All this awesomeness was written in C, a
+language that I almost never used. So I wanted to try and understand the implementation i.e How ideas were translated to code in AFL.</p>
+</div>
+<div class="section" id="instrumentation">
+<h2>Instrumentation</h2>
+<div class="section" id="idea">
+<h3>1. Idea</h3>
+<p>Consider a sample program which determines a command line parameter to be even or odd.</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;time.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">arc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+        <span class="p">((</span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">?</span> <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Odd&quot;</span><span class="p">)</span> <span class="o">:</span> <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Even&quot;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Coverage guided fuzzing requires the fuzzer to be aware of execution flow in the target in response to a certain input. One way to achieve it is to
+modify the source code in a way to trace the flow. Somewhat like</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;time.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">arc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+        <span class="n">notifyFuzzer</span><span class="p">(</span><span class="s">&quot;main starting&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">notifyFuzzer</span><span class="p">(</span><span class="s">&quot;if condition taken&quot;</span><span class="p">)</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Odd&quot;</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="n">notifyFuzzer</span><span class="p">(</span><span class="s">&quot;else condition taken&quot;</span><span class="p">)</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Even&quot;</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Question remains - <em>How to instrument super huge code base in a language agnostic and collision resistant manner?</em>.:</p>
+<pre class="literal-block">
+HINT: Compilers (language -&gt; assembly), assembler (assembly -&gt; object code), linker (object code -&gt; executable/library)
+</pre>
+<p>Assembler is a good place to instrument the basic blocks. For example, <a class="reference external" href="https://gcc.gnu.org/">gcc</a> by default uses <a class="reference external" href="https://en.wikipedia.org/wiki/GNU_Assembler">GNU as</a>
+assembler. <a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-gcc.c">afl-gcc</a> is a wrapper around gcc which uses
+<a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-as.c">afl-as</a> by symlinking <em>afl-as</em> as <em>as</em> and adding the directory to compiler
+search path via <tt class="docutils literal"><span class="pre">-B</span></tt>.</p>
+</div>
+<div class="section" id="coverage-measurements">
+<h3>2. Coverage Measurements</h3>
+<p>Please go through <strong>Coverage measurements</strong> section of the technical paper for an indepth understanding of it. A quick recap for the enlightened ones, AFL assigns a random
+compile time constant to each basic block and uses a 64kB array to trace the execution flow with the help of following logic.</p>
+<div class="highlight"><pre><span></span><span class="n">cur_location</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">COMPILE_TIME_RANDOM</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="n">shared_mem</span><span class="p">[</span><span class="n">cur_location</span> <span class="o">^</span> <span class="n">prev_location</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+<span class="n">prev_location</span> <span class="o">=</span> <span class="n">cur_location</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="section" id="communication">
+<h3>3. Communication</h3>
+<ul class="simple">
+<li>AFL uses forkserver model to fuzz a program. For more info on the forkserver model of fuzzing, check <a class="reference external" href="https://lcamtuf.blogspot.in/2014/10/fuzzing-binaries-without-execve.html">this</a>.</li>
+<li>Instance of the instrumented binary will be used as a forkserver which will communicate with the fuzzer process via fds 198 (control queue) &amp; 199 (status queue).</li>
+<li>Clones of this forkserver instance are used to run the testcases. So, techically the actual fuzzy input execution happens in grandchildren process of the fuzzer.</li>
+<li>The execution trace from the target is available via shared memory (shm) to the fuzzer process.</li>
+</ul>
+</div>
+<div class="section" id="implementation">
+<h3>4. Implementation</h3>
+<p><strong>afl-as</strong> <a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-as.c#L254">parses</a> the assembly file and adds</p>
+<ul>
+<li><p class="first"><a class="reference external" href="https://github.com/mcarpenter/afl/blob/9185f39b38b84bfdfba9824e70d3e8480472af76/afl-as.h#L130">a trampoline</a> at places where flow needs to be recorded. Each trampoline
+written has a unique constant hardcoded in it, which is used for tracing the flow between different blocks. That constant is loaded into [re]cx and <strong>__afl_maybe_log</strong>
+ion is called. AFL generally places a trampoline at the beginning of main to create the forkserver.</p>
+<blockquote>
+<div class="highlight"><pre><span></span>lea rsp, qword rsp - 0x98
+mov qword [rsp], rdx
+mov qword [arg_8h], rcx
+mov qword [arg_10h], rax
+mov rcx, 0xcb0
+call loc.__afl_maybe_log
+mov rax, qword [arg_10h]
+mov rcx, qword [arg_8h]
+mov rdx, qword [rsp]
+lea rsp, qword rsp + 0x98
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/mcarpenter/afl/blob/9185f39b38b84bfdfba9824e70d3e8480472af76/afl-as.h#L381">a main payload</a> which consists of multiple __afl code locations like
+<em>__afl_maybe_log</em> and other variable declarations that will be used by those functions. In an instrumented binary you can find the following afl related symbols, all NOTYPE
+ones are basically assembly code locations for jumping to and OBJECT symbols are for variable data.</p>
+<blockquote>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="7%" />
+<col width="17%" />
+<col width="69%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Type</th>
+<th class="head">Bind</th>
+<th class="head">Name</th>
+<th class="head">Usage</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_maybe_log()</td>
+<td>The only function called from trampoline
+- (__afl_area_ptr == 0) __afl_setup() : __afl_store()</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_setup()</td>
+<td><ul class="first last simple">
+<li>if __afl_setup_failure != 0: __afl_return()</li>
+<li>__afl_global_area_ptr == 0 ? __afl_setup_first() : __afl_store()</li>
+</ul>
+</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_setup_first()</td>
+<td>One time setup inside the target process
+- Get shm id from env var __AFL_SHM_ID
+- Map the shared memory and store the location in __afl_area_ptr &amp; __afl_global_area_ptr
+- __afl_forkserver()</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_store()</td>
+<td><ul class="first last simple">
+<li>shared_mem[cur_loc ^ prev_loc]++; prev_loc = cur_loc &gt;&gt; 1;</li>
+</ul>
+</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_die()</td>
+<td>Call exit()</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_forkserver()</td>
+<td>Write 4 bytes to fd 199 and __afl_fork_wait_loop()</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_fork_wait_loop()</td>
+<td><ul class="first last simple">
+<li>Wait for 4 bytes on fd 198 and then clone the current process</li>
+<li>In child process, __afl_fork_resume()</li>
+<li><dl class="first docutils">
+<dt>In parent</dt>
+<dd><ul class="first last">
+<li>Store child pid to __afl_fork_pid</li>
+<li>Write it to fd 199 and call waitpid which will write child exit status to __afl_temp</li>
+<li>Write child exit status in __afl_tempt to fd 199.</li>
+<li>__afl_fork_wait_loop()</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_fork_resume()</td>
+<td>Closes the fds 198 &amp; 199 (fuzzer &lt;-&gt; forkserver comm) &amp; resumes with execution</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_setup_abort()</td>
+<td>Increment __afl_setup_failure and __afl_return()</td>
+</tr>
+<tr><td>NOTYPE</td>
+<td>LOCAL</td>
+<td>__afl_return()</td>
+<td>Simple return</td>
+</tr>
+<tr><td>OBJECT</td>
+<td>GLOBAL</td>
+<td>__afl_global_area_ptr</td>
+<td>Global ptr to shared memory</td>
+</tr>
+<tr><td>OBJECT</td>
+<td>LOCAL</td>
+<td>__afl_area_ptr</td>
+<td>Ptr to shared memory</td>
+</tr>
+<tr><td>OBJECT</td>
+<td>LOCAL</td>
+<td>__afl_fork_pid</td>
+<td>Cloned pid variable</td>
+</tr>
+<tr><td>OBJECT</td>
+<td>LOCAL</td>
+<td>__afl_prev_loc</td>
+<td>Previous location variable, used to update traces in shared memory</td>
+</tr>
+<tr><td>OBJECT</td>
+<td>LOCAL</td>
+<td>__afl_setup_failure</td>
+<td>Counter to setup failures</td>
+</tr>
+<tr><td>OBJECT</td>
+<td>LOCAL</td>
+<td>__afl_temp</td>
+<td>Temp varible for different purposes</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="example">
+<h3>5. Example</h3>
+<p>The following snippet is of instrumented binary of above c code. The intention is to show the injection of trampolines.</p>
+<div class="highlight"><pre><span></span>            ;-- main:
+            ;-- section_end..plt:
+            ;-- section..text:
+            ;-- rip:
+/ (fcn) sym.main 311
+|           0x00000810      488da42468ff.  lea rsp, qword rsp - 0x98   ; test.c:5 int main(int arc, char *argv[]) { ; section 13 va=0x00000810 pa=0x00000810 sz=1730 vsz=1730 rwx=--r-x .text
+|           0x00000818      48891424       mov qword [rsp], rdx        ; .//:1347
+|           0x0000081c      48894c2408     mov qword [arg_8h], rcx
+|           0x00000821      4889442410     mov qword [arg_10h], rax
+|           0x00000826      48c7c1b00c00.  mov rcx, 0xcb0
+|           0x0000082d      e82e020000     call loc.__afl_maybe_log
+|           0x00000832      488b442410     mov rax, qword [arg_10h]    ; [0x10:8]=0x1003e0003
+|           0x00000837      488b4c2408     mov rcx, qword [arg_8h]     ; [0x8:8]=0
+|           0x0000083c      488b1424       mov rdx, qword [rsp]
+|           0x00000840      488da4249800.  lea rsp, qword rsp + 0x98
+|           0x00000848      4883ec08       sub rsp, 8
+|           0x0000084c      488b7e08       mov rdi, qword [rsi + 8]    ; stdlib.h:248   return (int) strtol (__nptr, (char **) NULL, 10); ; [0x8:8]=0
+|           0x00000850      ba0a000000     mov edx, 0xa
+|           0x00000855      31f6           xor esi, esi
+|           0x00000857      e864ffffff     call sym.imp.strtol         ; long strtol(const char *str, char**endptr, int base)
+|           0x0000085c      89c2           mov edx, eax                ; test.c:6  ((atoi(argv[1]) % 2) == 1) ? printf(&quot;Odd&quot;) : printf(&quot;Even&quot;);
+|           0x0000085e      c1ea1f         shr edx, 0x1f
+|           0x00000861      01d0           add eax, edx
+|           0x00000863      83e001         and eax, 1
+|           0x00000866      29d0           sub eax, edx
+|           0x00000868      83f801         cmp eax, 1
+|       ,=&lt; 0x0000086b      0f848a000000   je 0x8fb
+|       |   0x00000871      0f1f00         nop dword [rax]
+|       |   0x00000874      488da42468ff.  lea rsp, qword rsp - 0x98
+|       |   0x0000087c      48891424       mov qword [rsp], rdx
+|       |   0x00000880      48894c2408     mov qword [arg_8h], rcx
+|       |   0x00000885      4889442410     mov qword [arg_10h], rax
+|       |   0x0000088a      48c7c1ee7f00.  mov rcx, 0x7fee
+|       |   0x00000891      e8ca010000     call loc.__afl_maybe_log
+|       |   0x00000896      488b442410     mov rax, qword [arg_10h]    ; [0x10:8]=0x1003e0003
+|       |   0x0000089b      488b4c2408     mov rcx, qword [arg_8h]     ; [0x8:8]=0
+|       |   0x000008a0      488b1424       mov rdx, qword [rsp]
+|       |   0x000008a4      488da4249800.  lea rsp, qword rsp + 0x98
+|       |   0x000008ac      488d3d350600.  lea rdi, qword str.Even     ; 0xee8 ; &quot;Even&quot;
+|       |   0x000008b3      31c0           xor eax, eax
+|       |   0x000008b5      e8d6feffff     call sym.imp.printf         ; int printf(const char *format)
+|       |      ; JMP XREF from 0x00000942 (sym.main)
+|      .--&gt; 0x000008ba      6690           nop
+|      :|   0x000008bc      488da42468ff.  lea rsp, qword rsp - 0x98   ; test.c:8 }
+|      :|   0x000008c4      48891424       mov qword [rsp], rdx
+|      :|   0x000008c8      48894c2408     mov qword [arg_8h], rcx
+|      :|   0x000008cd      4889442410     mov qword [arg_10h], rax
+|      :|   0x000008d2      48c7c14f6300.  mov rcx, 0x634f
+|      :|   0x000008d9      e882010000     call loc.__afl_maybe_log
+|      :|   0x000008de      488b442410     mov rax, qword [arg_10h]    ; [0x10:8]=0x1003e0003
+|      :|   0x000008e3      488b4c2408     mov rcx, qword [arg_8h]     ; [0x8:8]=0
+|      :|   0x000008e8      488b1424       mov rdx, qword [rsp]
+|      :|   0x000008ec      488da4249800.  lea rsp, qword rsp + 0x98
+|      :|   0x000008f4      31c0           xor eax, eax
+|      :|   0x000008f6      4883c408       add rsp, 8
+/      :|   0x000008fa      c3             ret
+</pre></div>
+</div>
+</div>
+
+  </div></div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1 pure-u-md-1-5 pure-u-lg-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/c/">C</a> [1]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [4]</li>
+          <li><a href="/category/tools/">Tools</a> [8]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/fuzzing/">fuzzing</a> [1]</li>
+          <li><a href="/tag/tricks/">tricks</a> [11]</li>
+          <li><a href="/tag/info/">info</a> [12]</li>
+          <li><a href="/tag/python/">python</a> [3]</li>
+          <li><a href="/tag/reversing/">reversing</a> [1]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="domain@gmail.com"><i class="fa fa-envelope"></i> domain@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>
