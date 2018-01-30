@@ -223,67 +223,50 @@ ones are basically assembly code locations for jumping to and OBJECT symbols are
 &lt;/div&gt;
 &lt;div class="section" id="example"&gt;
 &lt;h3&gt;5. Example&lt;/h3&gt;
-&lt;p&gt;The following snippet is of instrumented binary of above c code. The intention is to show the injection of trampolines.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;            ;-- main:
-            ;-- section_end..plt:
-            ;-- section..text:
-            ;-- rip:
-/ (fcn) sym.main 311
-|           0x00000810      488da42468ff.  lea rsp, qword rsp - 0x98   ; test.c:5 int main(int arc, char *argv[]) { ; section 13 va=0x00000810 pa=0x00000810 sz=1730 vsz=1730 rwx=--r-x .text
-|           0x00000818      48891424       mov qword [rsp], rdx        ; .//:1347
-|           0x0000081c      48894c2408     mov qword [arg_8h], rcx
-|           0x00000821      4889442410     mov qword [arg_10h], rax
-|           0x00000826      48c7c1b00c00.  mov rcx, 0xcb0
-|           0x0000082d      e82e020000     call loc.__afl_maybe_log
-|           0x00000832      488b442410     mov rax, qword [arg_10h]    ; [0x10:8]=0x1003e0003
-|           0x00000837      488b4c2408     mov rcx, qword [arg_8h]     ; [0x8:8]=0
-|           0x0000083c      488b1424       mov rdx, qword [rsp]
-|           0x00000840      488da4249800.  lea rsp, qword rsp + 0x98
-|           0x00000848      4883ec08       sub rsp, 8
-|           0x0000084c      488b7e08       mov rdi, qword [rsi + 8]    ; stdlib.h:248   return (int) strtol (__nptr, (char **) NULL, 10); ; [0x8:8]=0
-|           0x00000850      ba0a000000     mov edx, 0xa
-|           0x00000855      31f6           xor esi, esi
-|           0x00000857      e864ffffff     call sym.imp.strtol         ; long strtol(const char *str, char**endptr, int base)
-|           0x0000085c      89c2           mov edx, eax                ; test.c:6  ((atoi(argv[1]) % 2) == 1) ? printf(&amp;quot;Odd&amp;quot;) : printf(&amp;quot;Even&amp;quot;);
-|           0x0000085e      c1ea1f         shr edx, 0x1f
-|           0x00000861      01d0           add eax, edx
-|           0x00000863      83e001         and eax, 1
-|           0x00000866      29d0           sub eax, edx
-|           0x00000868      83f801         cmp eax, 1
-|       ,=&amp;lt; 0x0000086b      0f848a000000   je 0x8fb
-|       |   0x00000871      0f1f00         nop dword [rax]
-|       |   0x00000874      488da42468ff.  lea rsp, qword rsp - 0x98
-|       |   0x0000087c      48891424       mov qword [rsp], rdx
-|       |   0x00000880      48894c2408     mov qword [arg_8h], rcx
-|       |   0x00000885      4889442410     mov qword [arg_10h], rax
-|       |   0x0000088a      48c7c1ee7f00.  mov rcx, 0x7fee
-|       |   0x00000891      e8ca010000     call loc.__afl_maybe_log
-|       |   0x00000896      488b442410     mov rax, qword [arg_10h]    ; [0x10:8]=0x1003e0003
-|       |   0x0000089b      488b4c2408     mov rcx, qword [arg_8h]     ; [0x8:8]=0
-|       |   0x000008a0      488b1424       mov rdx, qword [rsp]
-|       |   0x000008a4      488da4249800.  lea rsp, qword rsp + 0x98
-|       |   0x000008ac      488d3d350600.  lea rdi, qword str.Even     ; 0xee8 ; &amp;quot;Even&amp;quot;
-|       |   0x000008b3      31c0           xor eax, eax
-|       |   0x000008b5      e8d6feffff     call sym.imp.printf         ; int printf(const char *format)
-|       |      ; JMP XREF from 0x00000942 (sym.main)
-|      .--&amp;gt; 0x000008ba      6690           nop
-|      :|   0x000008bc      488da42468ff.  lea rsp, qword rsp - 0x98   ; test.c:8 }
-|      :|   0x000008c4      48891424       mov qword [rsp], rdx
-|      :|   0x000008c8      48894c2408     mov qword [arg_8h], rcx
-|      :|   0x000008cd      4889442410     mov qword [arg_10h], rax
-|      :|   0x000008d2      48c7c14f6300.  mov rcx, 0x634f
-|      :|   0x000008d9      e882010000     call loc.__afl_maybe_log
-|      :|   0x000008de      488b442410     mov rax, qword [arg_10h]    ; [0x10:8]=0x1003e0003
-|      :|   0x000008e3      488b4c2408     mov rcx, qword [arg_8h]     ; [0x8:8]=0
-|      :|   0x000008e8      488b1424       mov rdx, qword [rsp]
-|      :|   0x000008ec      488da4249800.  lea rsp, qword rsp + 0x98
-|      :|   0x000008f4      31c0           xor eax, eax
-|      :|   0x000008f6      4883c408       add rsp, 8
-/      :|   0x000008fa      c3             ret
+&lt;p&gt;Try compiling the above c code with afl-gcc and have a look at the decompiled main(). The easiest way to picturise is to use graph mode of your
+disassembler. The intention is to show the injection of trampolines in all basic blocks.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;                                        .------------------------------------------------------------------.
+                                        | [0x810] ;[gd]                                                    |
+                                        |   ; section 13 va=0x00000810 pa=0x00000810 sz=1730 vsz=1730 rwx= |
+                                        |   ;-- main:                                                      |
+                                        |   ;-- section_end..plt:                                          |
+                                        |   ;-- section..text:                                             |
+                                        | (fcn) sym.main 311                                               |
+                                        | lea rsp, qword rsp - 0x98; test.c:5 int main(int arc, char *argv |
+                                        | mov qword [rsp], rdx; .//:1347                                  |
+                                        | mov qword [arg_8h], rcx                                          |
+                                        | mov qword [arg_10h], rax                                         |
+                                        | mov rcx, 0xcb0                                                   |
+                                        | call loc.__afl_maybe_log;[ga]                                    |
+                                        | mov rax, qword [arg_10h]                                         |
+                                        | mov rcx, qword [arg_8h]                                          |
+                                        | mov rdx, qword [rsp]                                             |
+                                        | lea rsp, qword rsp + 0x98                                        |
+                                        | ...                                                              |
+                                        `------------------------------------------------------------------&amp;#39;
+                                                | |
+                                                | &amp;#39;-------------------------------.
+        .---------------------------------------&amp;#39;                                 |
+        |                                                                         |
+        |                                                                         |
+.----------------------------------------------------------------------.    .-----------------------------------------------------------------------.
+| nop dword [rax]                                                      |    |      ; JMP XREF from 0x0000086b (sym.main)                            |
+| lea rsp, qword rsp - 0x98                                            |    | nop                                                                   |
+| mov qword [rsp], rdx                                                 |    | lea rsp, qword rsp - 0x98; test.c:6  ((atoi(argv[1]) % 2) == 1) ? pri |
+| mov qword [arg_8h], rcx                                              |    | mov qword [rsp], rdx                                                  |
+| mov qword [arg_10h], rax                                             |    | mov qword [arg_8h], rcx                                               |
+| mov rcx, 0x7fee                                                      |    | mov qword [arg_10h], rax                                              |
+| call loc.__afl_maybe_log;[ga]                                        |    | mov rcx, 0xa6de                                                       |
+| ; [0x10:8]=0x1003e0003                                               |    | call loc.__afl_maybe_log;[ga]                                         |
+| mov rax, qword [arg_10h]                                             |    | ; [0x10:8]=0x1003e0003                                                |
+| ; [0x8:8]=0                                                          |    | mov rax, qword [arg_10h]                                              |
+| ...                                                                  |    | ; [0x8:8]=0                                                           |
+`----------------------------------------------------------------------&amp;#39;    | ...                                                                   |
+    |                                                                       `-----------------------------------------------------------------------&amp;#39;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-</content><category term="fuzzing"></category></entry><entry><title>Playing with python PEX files</title><link href="https://tunnelshade.in/blog/2017/11/playing-with-python-pex/" rel="alternate"></link><published>2017-11-12T00:00:00+05:30</published><updated>2017-11-12T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2017-11-12:/blog/2017/11/playing-with-python-pex/</id><summary type="html">&lt;div class="section" id="introduction"&gt;
+</content><category term="fuzzing"></category><category term="reversing"></category></entry><entry><title>Playing with python PEX files</title><link href="https://tunnelshade.in/blog/2017/11/playing-with-python-pex/" rel="alternate"></link><published>2017-11-12T00:00:00+05:30</published><updated>2017-11-12T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2017-11-12:/blog/2017/11/playing-with-python-pex/</id><summary type="html">&lt;div class="section" id="introduction"&gt;
 &lt;h2&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;Recently I have been coming across lots of &lt;strong&gt;P&lt;/strong&gt;ython &lt;strong&gt;EX&lt;/strong&gt;ecutables. This seems to be a popular way of distributing
 python programs along with their dependencies. All that is necessary is a compatible python runtime. A very quick and a bit
