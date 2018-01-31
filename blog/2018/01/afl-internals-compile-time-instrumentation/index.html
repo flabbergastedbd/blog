@@ -102,10 +102,9 @@ modify the source code in a way to trace the flow. Somewhat like</p>
         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-<p>Question remains - <em>How to instrument super huge code base in a language agnostic and collision resistant manner?</em>.:</p>
-<pre class="literal-block">
-HINT: Compilers (language -&gt; assembly), assembler (assembly -&gt; object code), linker (object code -&gt; executable/library)
-</pre>
+<p>Question remains - <em>How to instrument super huge code base in a language agnostic and collision resistant manner?</em></p>
+<blockquote>
+HINT: Compilers (language -&gt; assembly), assembler (assembly -&gt; object code), linker (object code -&gt; executable/library)</blockquote>
 <p>Assembler is a good place to instrument the basic blocks. For example, <a class="reference external" href="https://gcc.gnu.org/">gcc</a> by default uses <a class="reference external" href="https://en.wikipedia.org/wiki/GNU_Assembler">GNU as</a>
 assembler. <a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-gcc.c">afl-gcc</a> is a wrapper around gcc which uses
 <a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-as.c">afl-as</a> by symlinking <em>afl-as</em> as <em>as</em> and adding the directory to compiler
@@ -293,7 +292,7 @@ disassembler. The intention is to show the injection of trampolines in all basic
                                         |   ;-- section..text:                                             |
                                         | (fcn) sym.main 311                                               |
                                         | lea rsp, qword rsp - 0x98; test.c:5 int main(int arc, char *argv |
-                                        | mov qword [rsp], rdx; .//:1347                                  |
+                                        | mov qword [rsp], rdx; .//:1347                                   |
                                         | mov qword [arg_8h], rcx                                          |
                                         | mov qword [arg_10h], rax                                         |
                                         | mov rcx, 0xcb0                                                   |
@@ -322,7 +321,7 @@ disassembler. The intention is to show the injection of trampolines in all basic
 | ; [0x8:8]=0                                                          |    | mov rax, qword [arg_10h]                                              |
 | ...                                                                  |    | ; [0x8:8]=0                                                           |
 `----------------------------------------------------------------------&#39;    | ...                                                                   |
-    |                                                                       `-----------------------------------------------------------------------&#39;
+                                                                            `-----------------------------------------------------------------------&#39;
 </pre></div>
 </div>
 </div>

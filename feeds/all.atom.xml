@@ -42,10 +42,9 @@ modify the source code in a way to trace the flow. Somewhat like&lt;/p&gt;
         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Question remains - &lt;em&gt;How to instrument super huge code base in a language agnostic and collision resistant manner?&lt;/em&gt;.:&lt;/p&gt;
-&lt;pre class="literal-block"&gt;
-HINT: Compilers (language -&amp;gt; assembly), assembler (assembly -&amp;gt; object code), linker (object code -&amp;gt; executable/library)
-&lt;/pre&gt;
+&lt;p&gt;Question remains - &lt;em&gt;How to instrument super huge code base in a language agnostic and collision resistant manner?&lt;/em&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+HINT: Compilers (language -&amp;gt; assembly), assembler (assembly -&amp;gt; object code), linker (object code -&amp;gt; executable/library)&lt;/blockquote&gt;
 &lt;p&gt;Assembler is a good place to instrument the basic blocks. For example, &lt;a class="reference external" href="https://gcc.gnu.org/"&gt;gcc&lt;/a&gt; by default uses &lt;a class="reference external" href="https://en.wikipedia.org/wiki/GNU_Assembler"&gt;GNU as&lt;/a&gt;
 assembler. &lt;a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-gcc.c"&gt;afl-gcc&lt;/a&gt; is a wrapper around gcc which uses
 &lt;a class="reference external" href="https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-as.c"&gt;afl-as&lt;/a&gt; by symlinking &lt;em&gt;afl-as&lt;/em&gt; as &lt;em&gt;as&lt;/em&gt; and adding the directory to compiler
@@ -233,7 +232,7 @@ disassembler. The intention is to show the injection of trampolines in all basic
                                         |   ;-- section..text:                                             |
                                         | (fcn) sym.main 311                                               |
                                         | lea rsp, qword rsp - 0x98; test.c:5 int main(int arc, char *argv |
-                                        | mov qword [rsp], rdx; .//:1347                                  |
+                                        | mov qword [rsp], rdx; .//:1347                                   |
                                         | mov qword [arg_8h], rcx                                          |
                                         | mov qword [arg_10h], rax                                         |
                                         | mov rcx, 0xcb0                                                   |
@@ -262,7 +261,7 @@ disassembler. The intention is to show the injection of trampolines in all basic
 | ; [0x8:8]=0                                                          |    | mov rax, qword [arg_10h]                                              |
 | ...                                                                  |    | ; [0x8:8]=0                                                           |
 `----------------------------------------------------------------------&amp;#39;    | ...                                                                   |
-    |                                                                       `-----------------------------------------------------------------------&amp;#39;
+                                                                            `-----------------------------------------------------------------------&amp;#39;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
