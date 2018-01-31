@@ -53,7 +53,7 @@ modify the source code in a way to trace the flow. Somewhat like
                 return 0;
         }
 
-Question remains - *How to instrument super huge code base in a language agnostic and collision resistant manner?*.::
+Question remains - *How to instrument super huge code base in a language agnostic and collision resistant manner?*
 
   HINT: Compilers (language -> assembly), assembler (assembly -> object code), linker (object code -> executable/library)
 
@@ -146,7 +146,7 @@ compile time constant to each basic block and uses a 64kB array to trace the exe
 Try compiling the above c code with afl-gcc and have a look at the decompiled main(). The easiest way to picturise is to use graph mode of your
 disassembler. The intention is to show the injection of trampolines in all basic blocks.
 
-.. code-block:: assembly
+.. code-block:: terminal
 
                                               .------------------------------------------------------------------.
                                               | [0x810] ;[gd]                                                    |
@@ -156,7 +156,7 @@ disassembler. The intention is to show the injection of trampolines in all basic
                                               |   ;-- section..text:                                             |
                                               | (fcn) sym.main 311                                               |
                                               | lea rsp, qword rsp - 0x98; test.c:5 int main(int arc, char *argv |
-                                              | mov qword [rsp], rdx; .//:1347                                  |
+                                              | mov qword [rsp], rdx; .//:1347                                   |
                                               | mov qword [arg_8h], rcx                                          |
                                               | mov qword [arg_10h], rax                                         |
                                               | mov rcx, 0xcb0                                                   |
@@ -185,4 +185,4 @@ disassembler. The intention is to show the injection of trampolines in all basic
       | ; [0x8:8]=0                                                          |    | mov rax, qword [arg_10h]                                              |
       | ...                                                                  |    | ; [0x8:8]=0                                                           |
       `----------------------------------------------------------------------'    | ...                                                                   |
-          |                                                                       `-----------------------------------------------------------------------'
+                                                                                  `-----------------------------------------------------------------------'
