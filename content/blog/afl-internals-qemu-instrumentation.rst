@@ -3,6 +3,7 @@
 :title: Internals of AFL fuzzer - QEMU Instrumentation
 :category: Tools
 :tags: fuzzing, reversing, afl
+:image: https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg
 
 Introduction
 ============
