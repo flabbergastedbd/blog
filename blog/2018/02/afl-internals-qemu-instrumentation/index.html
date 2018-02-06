@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="https://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="fuzzing" />
+    <meta name="tags" content="reversing" />
+    <meta name="tags" content="afl" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" integrity="sha384-b92sF+wDNTHrfEtRaYo+EpcA8FUyHOSXrdxKc9XB9kaaX1rSQAgMevW6cYeE5Bdv" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="https://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-1">
+          <header id="banner" class="body">
+            <h1>
+              <a href="https://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="https://tunnelshade.in/blog/index.html">Blog</a> <a href="https://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+          </header><!-- /#banner -->
+        </div>
+      </div>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-4-5 pure-u-lg-4-5">
+<section id="content" class="body">
+  <header class="pure-g"><div class="pure-u-1">
+    <h2 class="entry-title">
+      <a href="https://tunnelshade.in/blog/2018/02/afl-internals-qemu-instrumentation/" rel="bookmark"
+         title="Permalink to Internals of AFL fuzzer - QEMU Instrumentation">Internals of AFL fuzzer - QEMU Instrumentation</a></h2>
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
+
+    <time class="published" datetime="2018-02-06T00:00:00+05:30">
+      [06-02-18]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [fuzzing,reversing,afl]
+
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
+    <div class="section" id="introduction">
+<h2>Introduction</h2>
+<p>If you need an introduction to <a class="reference external" href="http://lcamtuf.coredump.cx/afl/">AFL</a>, you have probably missed out a lot in the instrumented binary fuzzing saga
+for the past couple of years. <strong>afl-fuzz</strong>(fuzzer part of this toolset) is extremely fast, easy to use and requires minimal configuration.
+Technical details of AFL are available <a class="reference external" href="http://lcamtuf.coredump.cx/afl/technical_details.txt">here</a>. All this awesomeness is written in C, a
+language that I almost never used. So I wanted to try and understand the implementation i.e How ideas were translated to code in AFL.</p>
+<p>Before proceeding further, it is recommended to read through <a class="reference external" href="https://tunnelshade.in/blog/2018/01/afl-internals-compile-time-instrumentation/">afl compile time instrumentation</a>.
+Now, what about the black box binaries for which source code is unavailable?? Instrumentation is used to</p>
+<ul class="simple">
+<li>Trace the execution flow of basic blocks for the specificied fuzzy input.</li>
+<li>Save time by fuzzing in a <a class="reference external" href="https://lcamtuf.blogspot.in/2014/10/fuzzing-binaries-without-execve.html">forkserver model</a>.</li>
+</ul>
+<p>One way is to parse the given binary and rewrite it along with the instrumentation (afl-dyninst).</p>
+</div>
+<div class="section" id="qemu">
+<h2>1. QEMU</h2>
+<p><a class="reference external" href="https://www.qemu.org/">QEMU</a> is also a process emulator that lets you run different architectures on a single machine by doing dynamic translation.</p>
+<div class="section" id="binary-translation">
+<h3>1.1 Binary Translation</h3>
+<p>Read <a class="reference external" href="https://www.slideshare.net/RampantJeff/qemu-binary-translation">qemu binary translation</a>. QEMU can</p>
+<ul class="simple">
+<li>Translate basic blocks of one architecture (target i.e arch being emulated) to another (host i.e arch on which qemu is being run).</li>
+<li>Store the translated blocks (<strong>TB</strong>) in translated block cache (<strong>TBC</strong>) enabling translate once and use multiple times.</li>
+<li>Add prologue and epilogue to basic blocks to handle operations like jumps between basic blocks, restoring control etc..</li>
+</ul>
+<img alt="" class="align-center" src="https://wiki.xen.org/images/thumb/d/d0/F-t-2.jpg/600px-F-t-2.jpg" />
+</div>
+<div class="section" id="execution-flow">
+<h3>1.2 Execution flow</h3>
+<p>Let us walk through an abstracted qemu execution run</p>
+<img alt="" class="align-center" src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg" />
+<ul class="simple">
+<li>Start the pre-generated code prologue, i.e initialize the process and jmp to <strong>_start</strong> of the binary.</li>
+<li>Look for the translated block containing the <strong>_start</strong> program counter (PC) in the cache. If no, generate translation and cache it.</li>
+<li>Jump to the translated block and execute it.</li>
+<li>On next jump, repeat from the cache search.</li>
+</ul>
+<img alt="" class="align-center" src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-15-638.jpg" />
+</div>
+</div>
+<div class="section" id="idea">
+<h2>2. Idea</h2>
+<p>We need to find the function in qemu that gets called for executing a translated block. Keep in mind that
+qemu and the binary run in the same process, so this allows us to write instrumentation in C and <a class="reference external" href="https://github.com/mcarpenter/afl/tree/master/qemu_mode/patches">patch</a> qemu source.</p>
+<div class="section" id="coverage-instrumentation">
+<h3>2.1 Coverage Instrumentation</h3>
+<div class="highlight"><pre><span></span><span class="n">cur_loc</span>  <span class="o">=</span> <span class="p">(</span><span class="n">cur_loc</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">cur_loc</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
+<span class="n">cur_loc</span> <span class="o">&amp;=</span> <span class="n">MAP_SIZE</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="cm">/* Implement probabilistic instrumentation by looking at scrambled block</span>
+<span class="cm">address. This keeps the instrumented locations stable across runs. */</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">cur_loc</span> <span class="o">&gt;=</span> <span class="n">afl_inst_rms</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+
+<span class="n">afl_area_ptr</span><span class="p">[</span><span class="n">cur_loc</span> <span class="o">^</span> <span class="n">prev_loc</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+<span class="n">prev_loc</span> <span class="o">=</span> <span class="n">cur_loc</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="section" id="communication">
+<h3>2.2. Communication</h3>
+<p><strong>Same as compile time instrumentation</strong></p>
+<ul class="simple">
+<li>AFL uses forkserver model to fuzz a program. For more info on the forkserver model of fuzzing, check <a class="reference external" href="https://lcamtuf.blogspot.in/2014/10/fuzzing-binaries-without-execve.html">this</a>.</li>
+<li>Instance of the qemu running the target will be used as a forkserver which will communicate with the fuzzer process via fds 198 (control queue) &amp; 199 (status queue).</li>
+<li>Clones of this forkserver instance are used to run the testcases. So, techically the actual fuzzy input execution happens in grandchildren process of the fuzzer.</li>
+<li>The execution trace from the target is available via shared memory (shm) to the fuzzer process.</li>
+</ul>
+<p><strong>QEMU specific tweaks</strong></p>
+<ul class="simple">
+<li>An additional fd is used to relay <em>needs translation</em> messages between child and forkserver. If you recall qemu translation of basic blocks are done on a need basis. When
+a new basic block is encoutered in child, the forksever is made aware of the arguments (like pc, code segment base, flags) required for translation of that block. This allows
+the forkserver to cache the translation block by performing the translation in it's process. All the subsequent children cloned from the forkserver, will have the new TB in
+the cache.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="implementation">
+<h2>3. Implementation</h2>
+<div class="section" id="qemu-patches">
+<h3>3.1 QEMU Patches</h3>
+<ul>
+<li><p class="first"><a class="reference external" href="https://github.com/qemu/qemu/blob/4124ea4f5bd367ca6412fb2dfe7ac4d80e1504d9/accel/tcg/cpu-exec.c#L140">cpu_tb_exec()</a> is responsible for executing a TB and
+information such as <em>pc</em> address is available there. If you recall the compile time instrumentation where we used random constants for tracing, here we can use
+<em>pc</em> address of basic block as the constant.</p>
+<blockquote>
+<div class="highlight"><pre><span></span><span class="cm">/* Execute a TB, and fix up the CPU state afterwards if necessary */</span>
+<span class="k">static</span> <span class="kr">inline</span> <span class="n">tcg_target_ulong</span> <span class="nf">cpu_tb_exec</span><span class="p">(</span><span class="n">CPUState</span> <span class="o">*</span><span class="n">cpu</span><span class="p">,</span> <span class="n">TranslationBlock</span> <span class="o">*</span><span class="n">itb</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">CPUArchState</span> <span class="o">*</span><span class="n">env</span> <span class="o">=</span> <span class="n">cpu</span><span class="o">-&gt;</span><span class="n">env_ptr</span><span class="p">;</span>
+    <span class="kt">uintptr_t</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="n">TranslationBlock</span> <span class="o">*</span><span class="n">last_tb</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">tb_exit</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">tb_ptr</span> <span class="o">=</span> <span class="n">itb</span><span class="o">-&gt;</span><span class="n">tc</span><span class="p">.</span><span class="n">ptr</span><span class="p">;</span>
+
+    <span class="cm">/* AFL Instrumentation here */</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">itb</span><span class="o">-&gt;</span><span class="n">pc</span> <span class="o">==</span> <span class="n">afl_entry_point</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">afl_setup</span><span class="p">();</span>
+            <span class="n">afl_forkserver</span><span class="p">(</span><span class="n">cpu</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">afl_maybe_log</span><span class="p">(</span><span class="n">itb</span><span class="o">-&gt;</span><span class="n">pc</span><span class="p">);</span>
+
+    <span class="cm">/* End AFL Instrumentation here */</span>
+
+    <span class="n">qemu_log_mask_and_addr</span><span class="p">(</span><span class="n">CPU_LOG_EXEC</span><span class="p">,</span> <span class="n">itb</span><span class="o">-&gt;</span><span class="n">pc</span><span class="p">,</span>
+                           <span class="s">&quot;Trace %d: %p [&quot;</span>
+                           <span class="n">TARGET_FMT_lx</span> <span class="s">&quot;/&quot;</span> <span class="n">TARGET_FMT_lx</span> <span class="s">&quot;/%#x] %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+                           <span class="n">cpu</span><span class="o">-&gt;</span><span class="n">cpu_index</span><span class="p">,</span> <span class="n">itb</span><span class="o">-&gt;</span><span class="n">tc</span><span class="p">.</span><span class="n">ptr</span><span class="p">,</span>
+                           <span class="n">itb</span><span class="o">-&gt;</span><span class="n">cs_base</span><span class="p">,</span> <span class="n">itb</span><span class="o">-&gt;</span><span class="n">pc</span><span class="p">,</span> <span class="n">itb</span><span class="o">-&gt;</span><span class="n">flags</span><span class="p">,</span>
+                           <span class="n">lookup_symbol</span><span class="p">(</span><span class="n">itb</span><span class="o">-&gt;</span><span class="n">pc</span><span class="p">));</span>
+ <span class="p">....</span>
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/qemu/qemu/blob/4124ea4f5bd367ca6412fb2dfe7ac4d80e1504d9/accel/tcg/cpu-exec.c#L379">tb_find()</a> is responsible for finding a TB based on
+current state. This function takes care of cache lookup and calls <a class="reference external" href="https://github.com/qemu/qemu/blob/4124ea4f5bd367ca6412fb2dfe7ac4d80e1504d9/accel/tcg/cpu-exec.c#L404">tb_gen_code()</a>
+incase of translation required. We can add <a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L257">afl_request_tsl()</a> here to signal
+<a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L277">forkserver to translate</a> and keep this block in its memory for future clones. The
+parameters required for translation are constructed into a struct and passed.</p>
+<blockquote>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">afl_tsl</span> <span class="n">t</span><span class="p">;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">afl_fork_child</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+
+<span class="n">t</span><span class="p">.</span><span class="n">pc</span>      <span class="o">=</span> <span class="n">pc</span><span class="p">;</span>
+<span class="n">t</span><span class="p">.</span><span class="n">cs_base</span> <span class="o">=</span> <span class="n">cb</span><span class="p">;</span>
+<span class="n">t</span><span class="p">.</span><span class="n">flags</span>   <span class="o">=</span> <span class="n">flags</span><span class="p">;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">TSL_FD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">t</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">afl_tsl</span><span class="p">))</span> <span class="o">!=</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">afl_tsl</span><span class="p">))</span>
+        <span class="k">return</span><span class="p">;</span>
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/elfload.diff">elfload.patch</a> to record the <em>afl_entry_poiunt</em>, <em>afl_start_code</em> &amp; <em>afl_end_code</em>. These attributes
+are used in <a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L227">afl_maybe_log()</a> for some bounds check.</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/syscall.diff">syscall.patch</a> to pass the right <em>pid</em> and <em>tgid</em> incase of <em>SIGABRT</em> on forkserver.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="afl-patches">
+<h3>3.2 AFL Patches</h3>
+<p>These are just plain C ports of the existing assembly.</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L227">afl_maybe_log()</a> is the function that is calls setup for the first time and
+updates shared tracing memory for every execution of a TB.</li>
+<li><a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L107">afl_setup()</a> setups the shared memory in the child process. This SHM is where
+the 64kB trace data array is stored.</li>
+<li><a class="reference external" href="https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L160">afl_forkserver()</a> is responsible for creation of forkserver and listen
+on fd for launching clones.</li>
+</ul>
+<p><strong>PS</strong>: Considering what QEMU is capable of, I was amazed by the simplicity of this <a class="reference external" href="https://github.com/mcarpenter/afl/tree/master/qemu_mode/patches">patch</a> which required no major modifications to <strong>afl-fuzz</strong>.</p>
+</div>
+</div>
+
+  </div></div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1 pure-u-md-1-5 pure-u-lg-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [4]</li>
+          <li><a href="/category/tools/">Tools</a> [10]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/fuzzing/">fuzzing</a> [2]</li>
+          <li><a href="/tag/reversing/">reversing</a> [3]</li>
+          <li><a href="/tag/afl/">afl</a> [2]</li>
+          <li><a href="/tag/tricks/">tricks</a> [11]</li>
+          <li><a href="/tag/info/">info</a> [12]</li>
+          <li><a href="/tag/python/">python</a> [3]</li>
+          <li><a href="/tag/tools/">tools</a> [10]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="domain@gmail.com"><i class="fa fa-envelope"></i> domain@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>
