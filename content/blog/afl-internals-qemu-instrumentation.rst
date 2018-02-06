@@ -2,208 +2,170 @@
 :slug: afl-internals-qemu-instrumentation
 :title: Internals of AFL fuzzer - QEMU Instrumentation
 :category: Tools
-:tags: fuzzing, reversing
+:tags: fuzzing, reversing, afl
 
 Introduction
 ============
 
 If you need an introduction to `AFL <http://lcamtuf.coredump.cx/afl/>`_, you have probably missed out a lot in the instrumented binary fuzzing saga
 for the past couple of years. **afl-fuzz**\ (fuzzer part of this toolset) is extremely fast, easy to use and requires minimal configuration.
-Technical details of AFL are available `here <http://lcamtuf.coredump.cx/afl/technical_details.txt>`_. All this awesomeness was written in C, a
+Technical details of AFL are available `here <http://lcamtuf.coredump.cx/afl/technical_details.txt>`_. All this awesomeness is written in C, a
 language that I almost never used. So I wanted to try and understand the implementation i.e How ideas were translated to code in AFL.
 
 Before proceeding further, it is recommended to read through `afl compile time instrumentation <{filename}afl-internals-compile-time-instrumentation.rst>`_.
-Now, what about the black box binaries for which source code is unavailable?? Instrumentation was used to
+Now, what about the black box binaries for which source code is unavailable?? Instrumentation is used to
 
 - Trace the execution flow of basic blocks for the specificied fuzzy input.
 - Save time by fuzzing in a `forkserver model <https://lcamtuf.blogspot.in/2014/10/fuzzing-binaries-without-execve.html>`_.
 
 One way is to parse the given binary and rewrite it along with the instrumentation (afl-dyninst).
 
-QEMU
-====
+1. QEMU
+=======
 
-`QEMU <https://www.qemu.org/>`_ is a process emulator that lets you run different architectures on a single machine by doing dynamic translation. Read `qemu
-binary translation <https://www.slideshare.net/RampantJeff/qemu-binary-translation>`_. The important steps are
+`QEMU <https://www.qemu.org/>`_ is also a process emulator that lets you run different architectures on a single machine by doing dynamic translation.
 
-- Basic blocks in the target binary are translated into host architecture. The translated blocks are
-    - known as *TB*.
-    - cached in *T*\ ranslated *B*\ lock *C*\ ache (TBC).
-    - translated only when the instruction pointer jumps into it.
+1.1 Binary Translation
+----------------------
 
-- Execution flow
+Read `qemu binary translation <https://www.slideshare.net/RampantJeff/qemu-binary-translation>`_. QEMU can
+
+- Translate basic blocks of one architecture (target i.e arch being emulated) to another (host i.e arch on which qemu is being run).
+- Store the translated blocks (**TB**) in translated block cache (**TBC**) enabling translate once and use multiple times.
+- Add prologue and epilogue to basic blocks to handle operations like jumps between basic blocks, restoring control etc..
+
+.. image:: https://wiki.xen.org/images/thumb/d/d0/F-t-2.jpg/600px-F-t-2.jpg
+        :align: center
+
+1.2 Execution flow
+------------------
+
+Let us walk through an abstracted qemu execution run
+
+.. image:: https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg
+        :align: center
+
+- Start the pre-generated code prologue, i.e initialize the process and jmp to **_start** of the binary.
+- Look for the translated block containing the **_start** program counter (PC) in the cache. If no, generate translation and cache it.
+- Jump to the translated block and execute it.
+- On next jump, repeat from the cache search.
 
 .. image:: https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-15-638.jpg
+        :align: center
 
+2. Idea
+=======
 
-1. Idea
--------
+We need to find the function in qemu that gets called for executing a translated block. Keep in mind that
+qemu and the binary run in the same process, so this allows us to write instrumentation in C and `patch
+<https://github.com/mcarpenter/afl/tree/master/qemu_mode/patches>`_ qemu source.
 
-Consider a sample program which determines a command line parameter to be even or odd.
-
-.. code-block:: c
-
-        #include <stdio.h>
-        #include <stdlib.h>
-        #include <time.h>
-
-        int main(int arc, char *argv[]) {
-                ((atoi(argv[1]) % 2) == 1) ? printf("Odd") : printf("Even");
-                return 0;
-        }
-
-
-Coverage guided fuzzing requires the fuzzer to be aware of execution flow in the target in response to a certain input. One way to achieve it is to
-modify the source code in a way to trace the flow. Somewhat like
+2.1 Coverage Instrumentation
+----------------------------
 
 .. code-block:: c
 
-        #include <stdio.h>
-        #include <stdlib.h>
-        #include <time.h>
+	cur_loc  = (cur_loc >> 4) ^ (cur_loc << 8);
+	cur_loc &= MAP_SIZE - 1;
 
-        int main(int arc, char *argv[]) {
-                notifyFuzzer("main starting")
-                if ((atoi(argv[1]) % 2) == 1) {
-                        notifyFuzzer("if condition taken")
-                        printf("Odd");
-                } else {
-                        notifyFuzzer("else condition taken")
-                        printf("Even");
-                }
-                return 0;
-        }
+	/* Implement probabilistic instrumentation by looking at scrambled block
+	address. This keeps the instrumented locations stable across runs. */
 
-Question remains - *How to instrument super huge code base in a language agnostic and collision resistant manner?*
+	if (cur_loc >= afl_inst_rms) return;
 
-  HINT: Compilers (language -> assembly), assembler (assembly -> object code), linker (object code -> executable/library)
+	afl_area_ptr[cur_loc ^ prev_loc]++;
+	prev_loc = cur_loc >> 1;
 
-Assembler is a good place to instrument the basic blocks. For example, `gcc <https://gcc.gnu.org/>`_ by default uses `GNU as <https://en.wikipedia.org/wiki/GNU_Assembler>`_
-assembler. `afl-gcc <https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-gcc.c>`_ is a wrapper around gcc which uses
-`afl-as <https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-as.c>`_ by symlinking *afl-as* as *as* and adding the directory to compiler
-search path via ``-B``.
+2.2. Communication
+------------------
 
-2. Coverage Measurements
-------------------------
-
-Please go through **Coverage measurements** section of the technical paper for an indepth understanding of it. A quick recap for the enlightened ones, AFL assigns a random
-compile time constant to each basic block and uses a 64kB array to trace the execution flow with the help of following logic.
-
-.. code-block:: c
-
-        cur_location = <COMPILE_TIME_RANDOM>;
-        shared_mem[cur_location ^ prev_location]++;
-        prev_location = cur_location >> 1;
-
-3. Communication
-----------------
+**Same as compile time instrumentation**
 
 - AFL uses forkserver model to fuzz a program. For more info on the forkserver model of fuzzing, check `this <https://lcamtuf.blogspot.in/2014/10/fuzzing-binaries-without-execve.html>`_.
-- Instance of the instrumented binary will be used as a forkserver which will communicate with the fuzzer process via fds 198 (control queue) & 199 (status queue).
+- Instance of the qemu running the target will be used as a forkserver which will communicate with the fuzzer process via fds 198 (control queue) & 199 (status queue).
 - Clones of this forkserver instance are used to run the testcases. So, techically the actual fuzzy input execution happens in grandchildren process of the fuzzer.
 - The execution trace from the target is available via shared memory (shm) to the fuzzer process.
 
-4. Implementation
------------------
+**QEMU specific tweaks**
 
-**afl-as** `parses <https://github.com/mcarpenter/afl/blob/be2c066ef0939ea2b49435535ed614c37906ba30/afl-as.c#L254>`_ the assembly file and adds
+- An additional fd is used to relay *needs translation* messages between child and forkserver. If you recall qemu translation of basic blocks are done on a need basis. When
+  a new basic block is encoutered in child, the forksever is made aware of the arguments (like pc, code segment base, flags) required for translation of that block. This allows
+  the forkserver to cache the translation block by performing the translation in it's process. All the subsequent children cloned from the forkserver, will have the new TB in
+  the cache.
 
-- `a trampoline <https://github.com/mcarpenter/afl/blob/9185f39b38b84bfdfba9824e70d3e8480472af76/afl-as.h#L130>`_ at places where flow needs to be recorded. Each trampoline
-  written has a unique constant hardcoded in it, which is used for tracing the flow between different blocks. That constant is loaded into [re]cx and **__afl_maybe_log**
-  ion is called. AFL generally places a trampoline at the beginning of main to create the forkserver.
+3. Implementation
+=================
 
-        .. code-block:: assembly
+3.1 QEMU Patches
+----------------
 
-                lea rsp, qword rsp - 0x98
-                mov qword [rsp], rdx
-                mov qword [arg_8h], rcx
-                mov qword [arg_10h], rax
-                mov rcx, 0xcb0
-                call loc.__afl_maybe_log
-                mov rax, qword [arg_10h]
-                mov rcx, qword [arg_8h]
-                mov rdx, qword [rsp]
-                lea rsp, qword rsp + 0x98
+- `cpu_tb_exec() <https://github.com/qemu/qemu/blob/4124ea4f5bd367ca6412fb2dfe7ac4d80e1504d9/accel/tcg/cpu-exec.c#L140>`_ is responsible for executing a TB and
+  information such as *pc* address is available there. If you recall the compile time instrumentation where we used random constants for tracing, here we can use
+  *pc* address of basic block as the constant.
 
-- `a main payload <https://github.com/mcarpenter/afl/blob/9185f39b38b84bfdfba9824e70d3e8480472af76/afl-as.h#L381>`_ which consists of multiple __afl code locations like
-  *__afl_maybe_log* and other variable declarations that will be used by those functions. In an instrumented binary you can find the following afl related symbols, all NOTYPE
-  ones are basically assembly code locations for jumping to and OBJECT symbols are for variable data.
+	.. code-block:: c
 
-        ========= ========== ======================= ===============================================================================================
-           Type      Bind       Name                        Usage
-        ========= ========== ======================= ===============================================================================================
-          NOTYPE     LOCAL    __afl_maybe_log()         The only function called from trampoline
-                                                        - (__afl_area_ptr == 0) __afl_setup() : __afl_store()
-          NOTYPE     LOCAL    __afl_setup()             - if __afl_setup_failure != 0: __afl_return()
-                                                        - __afl_global_area_ptr == 0 ? __afl_setup_first() : __afl_store()
-          NOTYPE     LOCAL    __afl_setup_first()       One time setup inside the target process
-                                                        - Get shm id from env var __AFL_SHM_ID
-                                                        - Map the shared memory and store the location in __afl_area_ptr & __afl_global_area_ptr
-                                                        - __afl_forkserver()
-          NOTYPE     LOCAL    __afl_store()             - shared_mem[cur_loc ^ prev_loc]++; prev_loc = cur_loc >> 1;
-          NOTYPE     LOCAL    __afl_die()               Call exit()
-          NOTYPE     LOCAL    __afl_forkserver()        Write 4 bytes to fd 199 and __afl_fork_wait_loop()
-          NOTYPE     LOCAL    __afl_fork_wait_loop()    - Wait for 4 bytes on fd 198 and then clone the current process
-                                                        - In child process, __afl_fork_resume()
-                                                        - In parent
-                                                            - Store child pid to __afl_fork_pid
-                                                            - Write it to fd 199 and call waitpid which will write child exit status to __afl_temp
-                                                            - Write child exit status in __afl_tempt to fd 199.
-                                                            - __afl_fork_wait_loop()
-          NOTYPE     LOCAL    __afl_fork_resume()       Closes the fds 198 & 199 (fuzzer <-> forkserver comm) & resumes with execution
-          NOTYPE     LOCAL    __afl_setup_abort()       Increment __afl_setup_failure and __afl_return()
-          NOTYPE     LOCAL    __afl_return()            Simple return
-          OBJECT     GLOBAL   __afl_global_area_ptr     Global ptr to shared memory
-          OBJECT     LOCAL    __afl_area_ptr            Ptr to shared memory
-          OBJECT     LOCAL    __afl_fork_pid            Cloned pid variable
-          OBJECT     LOCAL    __afl_prev_loc            Previous location variable, used to update traces in shared memory
-          OBJECT     LOCAL    __afl_setup_failure       Counter to setup failures
-          OBJECT     LOCAL    __afl_temp                Temp varible for different purposes
-        ========= ========== ======================= ===============================================================================================
+		/* Execute a TB, and fix up the CPU state afterwards if necessary */
+		static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
+		{
+		    CPUArchState *env = cpu->env_ptr;
+		    uintptr_t ret;
+		    TranslationBlock *last_tb;
+		    int tb_exit;
+		    uint8_t *tb_ptr = itb->tc.ptr;
 
-5. Example
-----------
+		    /* AFL Instrumentation here */
 
-Try compiling the above c code with afl-gcc and have a look at the decompiled main(). The easiest way to picturise is to use graph mode of your
-disassembler. The intention is to show the injection of trampolines in all basic blocks.
+		    if(itb->pc == afl_entry_point) {
+			    afl_setup();
+			    afl_forkserver(cpu);
+		    }
+		    afl_maybe_log(itb->pc);
 
-.. code-block:: terminal
+		    /* End AFL Instrumentation here */
 
-                                              .------------------------------------------------------------------.
-                                              | [0x810] ;[gd]                                                    |
-                                              |   ; section 13 va=0x00000810 pa=0x00000810 sz=1730 vsz=1730 rwx= |
-                                              |   ;-- main:                                                      |
-                                              |   ;-- section_end..plt:                                          |
-                                              |   ;-- section..text:                                             |
-                                              | (fcn) sym.main 311                                               |
-                                              | lea rsp, qword rsp - 0x98; test.c:5 int main(int arc, char *argv |
-                                              | mov qword [rsp], rdx; .//:1347                                   |
-                                              | mov qword [arg_8h], rcx                                          |
-                                              | mov qword [arg_10h], rax                                         |
-                                              | mov rcx, 0xcb0                                                   |
-                                              | call loc.__afl_maybe_log;[ga]                                    |
-                                              | mov rax, qword [arg_10h]                                         |
-                                              | mov rcx, qword [arg_8h]                                          |
-                                              | mov rdx, qword [rsp]                                             |
-                                              | lea rsp, qword rsp + 0x98                                        |
-                                              | ...                                                              |
-                                              `------------------------------------------------------------------'
-                                                      | |
-                                                      | '-------------------------------.
-              .---------------------------------------'                                 |
-              |                                                                         |
-              |                                                                         |
-      .----------------------------------------------------------------------.    .-----------------------------------------------------------------------.
-      | nop dword [rax]                                                      |    |      ; JMP XREF from 0x0000086b (sym.main)                            |
-      | lea rsp, qword rsp - 0x98                                            |    | nop                                                                   |
-      | mov qword [rsp], rdx                                                 |    | lea rsp, qword rsp - 0x98; test.c:6  ((atoi(argv[1]) % 2) == 1) ? pri |
-      | mov qword [arg_8h], rcx                                              |    | mov qword [rsp], rdx                                                  |
-      | mov qword [arg_10h], rax                                             |    | mov qword [arg_8h], rcx                                               |
-      | mov rcx, 0x7fee                                                      |    | mov qword [arg_10h], rax                                              |
-      | call loc.__afl_maybe_log;[ga]                                        |    | mov rcx, 0xa6de                                                       |
-      | ; [0x10:8]=0x1003e0003                                               |    | call loc.__afl_maybe_log;[ga]                                         |
-      | mov rax, qword [arg_10h]                                             |    | ; [0x10:8]=0x1003e0003                                                |
-      | ; [0x8:8]=0                                                          |    | mov rax, qword [arg_10h]                                              |
-      | ...                                                                  |    | ; [0x8:8]=0                                                           |
-      `----------------------------------------------------------------------'    | ...                                                                   |
-                                                                                  `-----------------------------------------------------------------------'
+		    qemu_log_mask_and_addr(CPU_LOG_EXEC, itb->pc,
+					   "Trace %d: %p ["
+					   TARGET_FMT_lx "/" TARGET_FMT_lx "/%#x] %s\n",
+					   cpu->cpu_index, itb->tc.ptr,
+					   itb->cs_base, itb->pc, itb->flags,
+					   lookup_symbol(itb->pc));
+		 ....
+
+
+- `tb_find() <https://github.com/qemu/qemu/blob/4124ea4f5bd367ca6412fb2dfe7ac4d80e1504d9/accel/tcg/cpu-exec.c#L379>`_ is responsible for finding a TB based on
+  current state. This function takes care of cache lookup and calls `tb_gen_code() <https://github.com/qemu/qemu/blob/4124ea4f5bd367ca6412fb2dfe7ac4d80e1504d9/accel/tcg/cpu-exec.c#L404>`_
+  incase of translation required. We can add `afl_request_tsl() <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L257>`_ here to signal
+  `forkserver to translate <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L277>`_ and keep this block in its memory for future clones. The
+  parameters required for translation are constructed into a struct and passed.
+
+	.. code-block:: c
+
+		struct afl_tsl t;
+
+		if (!afl_fork_child) return;
+
+		t.pc      = pc;
+		t.cs_base = cb;
+		t.flags   = flags;
+
+		if (write(TSL_FD, &t, sizeof(struct afl_tsl)) != sizeof(struct afl_tsl))
+			return;
+
+- `elfload.patch <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/elfload.diff>`_ to record the *afl_entry_poiunt*, *afl_start_code* & *afl_end_code*. These attributes
+  are used in `afl_maybe_log()`_ for some bounds check.
+- `syscall.patch <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/syscall.diff>`_ to pass the right *pid* and *tgid* incase of *SIGABRT* on forkserver.
+
+3.2 AFL Patches
+---------------
+
+These are just plain C ports of the existing assembly.
+
+- `afl_maybe_log() <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L227>`_ is the function that is calls setup for the first time and
+  updates shared tracing memory for every execution of a TB.
+- `afl_setup() <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L107>`_ setups the shared memory in the child process. This SHM is where
+  the 64kB trace data array is stored.
+- `afl_forkserver() <https://github.com/mcarpenter/afl/blob/master/qemu_mode/patches/afl-qemu-cpu-inl.h#L160>`_ is responsible for creation of forkserver and listen
+  on fd for launching clones.
+
+**PS**: Considering what QEMU is capable of, I was amazed by the simplicity of this `patch`_ which required no major modifications to **afl-fuzz**.

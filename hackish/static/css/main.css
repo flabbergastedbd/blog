@@ -28,7 +28,7 @@ img
   max-width: 100%;
 }
 
-.image-center
+.align-center, .image-center
 {
   display: block;
   margin-left: auto;

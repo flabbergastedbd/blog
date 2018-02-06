@@ -2,7 +2,7 @@
 :slug: afl-internals-compile-time-instrumentation
 :title: Internals of AFL fuzzer - Compile Time Instrumentation
 :category: Tools
-:tags: fuzzing, reversing
+:tags: fuzzing, reversing, afl
 
 Introduction
 ============
