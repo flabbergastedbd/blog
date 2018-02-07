@@ -29,7 +29,8 @@ One way is to parse the given binary and rewrite it along with the instrumentati
 1.1 Binary Translation
 ----------------------
 
-Read `qemu binary translation <https://www.slideshare.net/RampantJeff/qemu-binary-translation>`_. QEMU can
+Read `qemu binary translation <https://www.slideshare.net/RampantJeff/qemu-binary-translation>`_ (All subsequent qemu internals' images are taken
+from this presentation). QEMU can
 
 - Translate basic blocks of one architecture (target i.e arch being emulated) to another (host i.e arch on which qemu is being run).
 - Store the translated blocks (**TB**) in translated block cache (**TBC**) enabling translate once and use multiple times.
@@ -37,6 +38,7 @@ Read `qemu binary translation <https://www.slideshare.net/RampantJeff/qemu-binar
 
 .. image:: https://wiki.xen.org/images/thumb/d/d0/F-t-2.jpg/600px-F-t-2.jpg
         :align: center
+        :alt: QEMU prologue and epilogue
 
 1.2 Execution flow
 ------------------
@@ -45,6 +47,7 @@ Let us walk through an abstracted qemu execution run
 
 .. image:: https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg
         :align: center
+        :alt: QEMU Execution run
 
 - Start the pre-generated code prologue, i.e initialize the process and jmp to **_start** of the binary.
 - Look for the translated block containing the **_start** program counter (PC) in the cache. If no, generate translation and cache it.
@@ -53,6 +56,7 @@ Let us walk through an abstracted qemu execution run
 
 .. image:: https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-15-638.jpg
         :align: center
+        :alt: QEMU Exection Flow
 
 2. Idea
 =======
