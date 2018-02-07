@@ -83,25 +83,26 @@ Now, what about the black box binaries for which source code is unavailable?? In
 <p><a class="reference external" href="https://www.qemu.org/">QEMU</a> is also a process emulator that lets you run different architectures on a single machine by doing dynamic translation.</p>
 <div class="section" id="binary-translation">
 <h3>1.1 Binary Translation</h3>
-<p>Read <a class="reference external" href="https://www.slideshare.net/RampantJeff/qemu-binary-translation">qemu binary translation</a>. QEMU can</p>
+<p>Read <a class="reference external" href="https://www.slideshare.net/RampantJeff/qemu-binary-translation">qemu binary translation</a> (All subsequent qemu internals' images are taken
+from this presentation). QEMU can</p>
 <ul class="simple">
 <li>Translate basic blocks of one architecture (target i.e arch being emulated) to another (host i.e arch on which qemu is being run).</li>
 <li>Store the translated blocks (<strong>TB</strong>) in translated block cache (<strong>TBC</strong>) enabling translate once and use multiple times.</li>
 <li>Add prologue and epilogue to basic blocks to handle operations like jumps between basic blocks, restoring control etc..</li>
 </ul>
-<img alt="" class="align-center" src="https://wiki.xen.org/images/thumb/d/d0/F-t-2.jpg/600px-F-t-2.jpg" />
+<img alt="QEMU prologue and epilogue" class="align-center" src="https://wiki.xen.org/images/thumb/d/d0/F-t-2.jpg/600px-F-t-2.jpg" />
 </div>
 <div class="section" id="execution-flow">
 <h3>1.2 Execution flow</h3>
 <p>Let us walk through an abstracted qemu execution run</p>
-<img alt="" class="align-center" src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg" />
+<img alt="QEMU Execution run" class="align-center" src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg" />
 <ul class="simple">
 <li>Start the pre-generated code prologue, i.e initialize the process and jmp to <strong>_start</strong> of the binary.</li>
 <li>Look for the translated block containing the <strong>_start</strong> program counter (PC) in the cache. If no, generate translation and cache it.</li>
 <li>Jump to the translated block and execute it.</li>
 <li>On next jump, repeat from the cache search.</li>
 </ul>
-<img alt="" class="align-center" src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-15-638.jpg" />
+<img alt="QEMU Exection Flow" class="align-center" src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-15-638.jpg" />
 </div>
 </div>
 <div class="section" id="idea">
