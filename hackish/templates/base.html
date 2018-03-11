@@ -47,18 +47,23 @@
 </head>
 
 <body id="index" class="home">
+  <br>
   <div class="pure-g">
     <div class="pure-u-2-24"></div>
     <div class="pure-u-20-24">
       <div class="pure-g">
-        <div class="pure-u-1">
-          <header id="banner" class="body">
+        <div class="pure-u-20-24" style="display: flex; align-items: center;">
             <h1>
               <a href="{{ SITEURL }}/">{{ SITENAME }} </a> {% block subheading %}{% endblock subheading %}
             </h1>
-          </header><!-- /#banner -->
+        </div>
+        <div class="pure-u-4-24" style="display: flex; align-items: center;">
+          <img class="logo" src="{{ SITEURL }}/{{ THEME_STATIC_DIR}}/images/logo.png"/>
         </div>
       </div>
+      <br>
+      <hr>
+      <br>
       <div class="pure-g">
         {% block frame %}
         {% endblock %}

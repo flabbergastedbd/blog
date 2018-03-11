@@ -12,13 +12,13 @@ html, button, input, select, textarea,
 }
 
 body {
-  background-color: #333333;
+  background-color: #111111;
   color: #eeeeee;
 }
 
 section#content {
   padding: 5px 15px;
-  background-color: #292929;
+  background-color: #191919;
 }
 
 img
@@ -36,11 +36,11 @@ img
 }
 
 a:link {
-  color: #8db2e5;
+  color: #228bbf;
 }
 
 a:visited {
-  color: #8db2e5;
+  color: #228bbf;
 }
 
 a:hover {
@@ -54,8 +54,14 @@ a.no_underline {
 
 h1 a {
   font-family: "Nova Square", cursive;
+  font-size: 150%;
   text-decoration: none;
   color: #ffffff;
+}
+
+.logo {
+  width: auto%;
+  height: 90%;
 }
 
 /* Page titles */
@@ -94,3 +100,4 @@ tt {
   border-radius: 5px;
   border: 2px;
 }
+
