@@ -132,21 +132,25 @@
 <article class="hentry">
 <div class="pure-g"><div class="pure-u-1">
     <header><h3 class="entry-title">
-        <time class="published" datetime="2018-02-06T00:00:00+05:30"> [06-02-18] </time>
-        <a href="https://tunnelshade.in/blog/2018/02/afl-internals-qemu-instrumentation/" rel="bookmark" title="Permalink to Internals of AFL fuzzer - QEMU Instrumentation">Internals of AFL fuzzer - QEMU Instrumentation</a>
+        <time class="published" datetime="2018-09-05T00:00:00+05:30"> [05-09-18] </time>
+        <a href="https://tunnelshade.in/blog/2018/09/hongfuzz-intel-pt-instrumentation/" rel="bookmark" title="Permalink to Internals of Hongfuzz - Intel PT">Internals of Hongfuzz - Intel PT</a>
         [Tools]
     </h3></header>
 </div></div>
 <div class="pure-g">
   <div class="pure-u-3-24">
-<img src="https://image.slidesharecdn.com/qemu-binarytranslation-140930222818-phpapp02/95/qemu-binary-translation-10-638.jpg" class="pure-img">  </div>
+<img src="https://raw.githubusercontent.com/google/honggfuzz/master/screenshot-honggfuzz-1.png" class="pure-img">  </div>
   <div class="pure-u-1-24"></div>
   <div class="pure-u-20-24">
-    <div class="entry-content"> <div class="section" id="introduction">
-<h2>Introduction</h2>
-<p>If you need an introduction to <a class="reference external" href="http://lcamtuf.coredump.cx/afl/">AFL</a>, you have probably missed out a lot in the instrumented binary fuzzing saga
-for the past couple of years. <strong>afl-fuzz</strong>(fuzzer part of this toolset) is extremely fast, easy to use and requires minimal configuration.
-Technical details of AFL are available <a class="reference external" href="http://lcamtuf.coredump.cx/afl/technical_details.txt">here …</a></p></div> </div><!-- /.entry-content -->
+    <div class="entry-content"> <div class="section" id="tldr">
+<h2>TLDR</h2>
+<p>Intel Processor Trace is a hardware level execution tracing utility provided by Intel. The information provided is highly compressed allowing
+passing of granular information. So, instead of using QEMU for coverage guided blackbox fuzzing, Intel-PT should provide a rather performant
+way.</p>
+</div>
+<div class="section" id="recap">
+<h2>Recap</h2>
+<p>Before proceeding further, it is recommended to …</p></div> </div><!-- /.entry-content -->
   </div>
 </div>
 </article>      </fieldset>

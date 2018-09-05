@@ -1,5 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="https://tunnelshade.in/" rel="alternate"></link><link href="https://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>https://tunnelshade.in/</id><updated>2018-02-06T00:00:00+05:30</updated><entry><title>Internals of AFL fuzzer - QEMU Instrumentation</title><link href="https://tunnelshade.in/blog/2018/02/afl-internals-qemu-instrumentation/" rel="alternate"></link><published>2018-02-06T00:00:00+05:30</published><updated>2018-02-06T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-02-06:/blog/2018/02/afl-internals-qemu-instrumentation/</id><summary type="html">&lt;div class="section" id="introduction"&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="https://tunnelshade.in/" rel="alternate"></link><link href="https://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>https://tunnelshade.in/</id><updated>2018-09-05T00:00:00+05:30</updated><entry><title>Internals of Hongfuzz - Intel PT</title><link href="https://tunnelshade.in/blog/2018/09/hongfuzz-intel-pt-instrumentation/" rel="alternate"></link><published>2018-09-05T00:00:00+05:30</published><updated>2018-09-05T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-09-05:/blog/2018/09/hongfuzz-intel-pt-instrumentation/</id><summary type="html">&lt;div class="section" id="tldr"&gt;
+&lt;h2&gt;TLDR&lt;/h2&gt;
+&lt;p&gt;Intel Processor Trace is a hardware level execution tracing utility provided by Intel. The information provided is highly compressed allowing
+passing of granular information. So, instead of using QEMU for coverage guided blackbox fuzzing, Intel-PT should provide a rather performant
+way.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="recap"&gt;
+&lt;h2&gt;Recap&lt;/h2&gt;
+&lt;p&gt;Before proceeding further, it is recommended to …&lt;/p&gt;&lt;/div&gt;</summary><content type="html">&lt;div class="section" id="tldr"&gt;
+&lt;h2&gt;TLDR&lt;/h2&gt;
+&lt;p&gt;Intel Processor Trace is a hardware level execution tracing utility provided by Intel. The information provided is highly compressed allowing
+passing of granular information. So, instead of using QEMU for coverage guided blackbox fuzzing, Intel-PT should provide a rather performant
+way.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="recap"&gt;
+&lt;h2&gt;Recap&lt;/h2&gt;
+&lt;p&gt;Before proceeding further, it is recommended to read through &lt;a class="reference external" href="https://tunnelshade.in/blog/2018/01/afl-internals-compile-time-instrumentation/"&gt;afl compile time instrumentation&lt;/a&gt;
+to understand coverage guided fuzzing and then &lt;a class="reference external" href="https://tunnelshade.in/blog/2018/02/afl-internals-qemu-instrumentation/"&gt;afl qemu instrumentation&lt;/a&gt; to get hold of how QEMU
+can be used to trace basic block execution.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="intel-pt"&gt;
+&lt;h2&gt;1. Intel PT&lt;/h2&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://software.intel.com/en-us/blogs/2013/09/18/processor-tracing"&gt;Intel Processor Trace&lt;/a&gt; was introduced starting with 5th gen Intel core processors.
+Linux included this in &lt;a class="reference external" href="https://raw.githubusercontent.com/torvalds/linux/master/tools/perf/Documentation/intel-pt.txt"&gt;perf tool kit&lt;/a&gt; as a &lt;em&gt;Performance Monitor Unit&lt;/em&gt;.
+The beauty of this is that we can use perf toolkit to trace execution flow of applications.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="fuzzing-use-case"&gt;
+&lt;h2&gt;2. Fuzzing Use Case&lt;/h2&gt;
+&lt;p&gt;Coverage based fuzzing depends on what basic blocks of a program are reached in a fuzzing run. This allows fuzzer to pick subsequent inputs to force
+more exploration of previously unseen code paths. First, we will look at how to record an execution trace in userland and then have a look at hongfuzz's
+implementation.&lt;/p&gt;
+&lt;p&gt;Let us take the following simple c code and compile without &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Position-independent_code#Position-independent_executables"&gt;PIE&lt;/a&gt;
+using gcc's &lt;strong&gt;-no-pie&lt;/strong&gt; flag.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[])&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argc&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;else&lt;/span&gt;
+                &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Above code will produce the following basic blocks in main function.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;          .--------------------------------------.
+          | (fcn) main 31                        |
+          |   main (signed int arg1, int arg2);  |
+          | ; var int local_10h @ rbp-0x10       |
+          | ; var signed int local_4h @ rbp-0x4  |
+          | ; DATA XREF from entry0 (+0x21)      |
+          | push rbp                             |
+          | mov rbp, rsp                         |
+          | ; arg1                               |
+          | mov dword [local_4h], edi            |
+          | ; arg2                               |
+          | mov qword [local_10h], rsi           |
+          | ; [0x1:4]=-1                         |
+          | ; 1                                  |
+          | cmp dword [local_4h], 1              |
+          | jle 0x40111e;[ga]                    |
+          `--------------------------------------&amp;#39;
+                  f t
+                  | |
+                  | &amp;#39;-------------.
+    .-------------&amp;#39;               |
+    |                             |
+.-------------------------.   .----------------------------------.
+|  0x401117 [gd]          |   |  0x40111e [ga]                   |
+| ; -1                    |   | ; CODE XREF from main (0x401115) |
+| mov eax, 0xffffffff     |   | mov eax, 0                       |
+| jmp 0x401123;[gc]       |   `----------------------------------&amp;#39;
+`-------------------------&amp;#39;       v
+    v                             |
+    |                             |
+    &amp;#39;-------------.               |
+                  | .-------------&amp;#39;
+                  | |
+            .----------------------------------.
+            |  0x401123 [gc]                   |
+            | ; CODE XREF from main (0x40111c) |
+            | pop rbp                          |
+            | ret                              |
+            `----------------------------------`
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Basic blocks at &lt;em&gt;0x401117&lt;/em&gt; and &lt;em&gt;0x40111e&lt;/em&gt; are the variable ones here, i.e depending on input program will choose one of these
+at runtime.&lt;/p&gt;
+&lt;div class="section" id="perf-record"&gt;
+&lt;h3&gt;2.1 perf record&lt;/h3&gt;
+&lt;p&gt;Let us trace execution flow of the program once without any parameters and once with parameters and record with &lt;a class="reference external" href="https://linux.die.net/man/1/perf-record"&gt;perf record&lt;/a&gt;.
+perf record by default stores the trace data in perf.data and all other perf tools by default read from this file in working directory.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ perf record -e intel_pt//u -- ./a.out
+&lt;span class="o"&gt;[&lt;/span&gt; perf record: Woken up &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="nb"&gt;times&lt;/span&gt; to write data &lt;span class="o"&gt;]&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt; perf record: Captured and wrote &lt;span class="m"&gt;0&lt;/span&gt;.010 MB perf.data &lt;span class="o"&gt;]&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Let us see the basic blocks taken during this execution&lt;/span&gt;
+$ perf script --itrace&lt;span class="o"&gt;=&lt;/span&gt;b &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s2"&gt;&amp;quot;/ main.* main/&amp;quot;&lt;/span&gt;
+
+           a.out &lt;span class="m"&gt;24665&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;000&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;50879&lt;/span&gt;.554567:          &lt;span class="m"&gt;1&lt;/span&gt;  branches:u:            &lt;span class="m"&gt;401115&lt;/span&gt; main+0xf &lt;span class="o"&gt;(&lt;/span&gt;a.out&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt;           40111e main+0x18 &lt;span class="o"&gt;(&lt;/span&gt;a.out&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the above case you can see that execution went through basic block &lt;em&gt;0x40111e&lt;/em&gt;. &lt;em&gt;-e&lt;/em&gt; in perf record is to specify the kind of event, here we specified &lt;em&gt;intel_pt&lt;/em&gt;
+and &lt;em&gt;u&lt;/em&gt; stands for userspace. Have a look at linux intel-pt docs for more configuration options. Let us rerun with parameters this time.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ perf record -e intel_pt//u -- ./a.out parameter
+&lt;span class="o"&gt;[&lt;/span&gt; perf record: Woken up &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="nb"&gt;times&lt;/span&gt; to write data &lt;span class="o"&gt;]&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt; perf record: Captured and wrote &lt;span class="m"&gt;0&lt;/span&gt;.010 MB perf.data &lt;span class="o"&gt;]&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Let us see the basic blocks taken during this execution&lt;/span&gt;
+$ perf script --itrace&lt;span class="o"&gt;=&lt;/span&gt;b &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s2"&gt;&amp;quot;/ main.* main/&amp;quot;&lt;/span&gt;
+
+           a.out &lt;span class="m"&gt;26225&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;001&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;51458&lt;/span&gt;.418505:          &lt;span class="m"&gt;1&lt;/span&gt;  branches:u:            40111c main+0x16 &lt;span class="o"&gt;(&lt;/span&gt;a.out&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt;           &lt;span class="m"&gt;401123&lt;/span&gt; main+0x1d &lt;span class="o"&gt;(&lt;/span&gt;a.out&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here since the first jump didn't happen, we only see the second jump i.e from basic block starting at &lt;em&gt;0x40111c&lt;/em&gt; to &lt;em&gt;0x401123&lt;/em&gt;. This is more passive way of analyzing
+already stored trace of an execution.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="perf-event-open"&gt;
+&lt;h3&gt;2.2 perf_event_open&lt;/h3&gt;
+&lt;p&gt;&lt;a class="reference external" href="http://man7.org/linux/man-pages/man2/perf_event_open.2.html"&gt;perf_event_open&lt;/a&gt; is the programmatic way of doing the same. That man page does better
+job of explaining than I ever can.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="hongfuzz"&gt;
+&lt;h3&gt;2.3 Hongfuzz&lt;/h3&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Hongfuzz &lt;a class="reference external" href="https://github.com/google/honggfuzz/blob/cc6b929d45b8bbfb3e28617ab511a2b23b5aa962/linux/perf.c#L116"&gt;uses&lt;/a&gt; this api to leverage basic block tracing.&lt;/li&gt;
+&lt;li&gt;Then it mmaps this filedescriptor to enable reading sampled events from the ring buffer in userspace.&lt;/li&gt;
+&lt;li&gt;Subsequently it leverages Intel's &lt;a class="reference external" href="https://github.com/01org/processor-trace/blob/master/doc/howto_libipt.md"&gt;libipt&lt;/a&gt; to decode these event packets.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/google/honggfuzz/blob/cc6b929d45b8bbfb3e28617ab511a2b23b5aa962/linux/pt.c#L47"&gt;Updates&lt;/a&gt; it's feedback map based on the events.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;__attribute__&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;hot&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="kr"&gt;inline&lt;/span&gt; &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;perf_ptAnalyzePkt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;run_t&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;pt_packet&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;type&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;ppt_tip&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="kt"&gt;uint64_t&lt;/span&gt; &lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;switch&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ipc&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nl"&gt;pt_ipc_update_16&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mh"&gt;0xFFFF&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nl"&gt;pt_ipc_update_32&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mh"&gt;0xFFFFFFFF&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nl"&gt;pt_ipc_update_48&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mh"&gt;0xFFFFFFFFFFFF&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nl"&gt;pt_ipc_sext_48&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;sext&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;48&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+            &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nl"&gt;pt_ipc_full&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;packet&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;=&lt;/span&gt; &lt;span class="n"&gt;_HF_PERF_BITMAP_BITSZ_MASK&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;register&lt;/span&gt; &lt;span class="kt"&gt;uint8_t&lt;/span&gt; &lt;span class="n"&gt;prev&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ATOMIC_BTS&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;global&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;feedback&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feedbackMap&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;bbMapPc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;prev&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;linux&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;hwCnts&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;newBBCnt&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Leveraging hardware tracing features like these will enable blackbox coverage guided fuzzing to be a lot faster than usermode translation hooks
+like that were done in AFL QEMU's case. There also exists a &lt;a class="reference external" href="https://github.com/hunter-ht-2018/ptfuzzer"&gt;AFL fork&lt;/a&gt; leveraing Intel PT .&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</content><category term="fuzzing"></category><category term="reversing"></category></entry><entry><title>Internals of AFL fuzzer - QEMU Instrumentation</title><link href="https://tunnelshade.in/blog/2018/02/afl-internals-qemu-instrumentation/" rel="alternate"></link><published>2018-02-06T00:00:00+05:30</published><updated>2018-02-06T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-02-06:/blog/2018/02/afl-internals-qemu-instrumentation/</id><summary type="html">&lt;div class="section" id="introduction"&gt;
 &lt;h2&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;If you need an introduction to &lt;a class="reference external" href="http://lcamtuf.coredump.cx/afl/"&gt;AFL&lt;/a&gt;, you have probably missed out a lot in the instrumented binary fuzzing saga
 for the past couple of years. &lt;strong&gt;afl-fuzz&lt;/strong&gt;(fuzzer part of this toolset) is extremely fast, easy to use and requires minimal configuration.
