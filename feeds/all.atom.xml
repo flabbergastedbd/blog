@@ -1,5 +1,198 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="https://tunnelshade.in/" rel="alternate"></link><link href="https://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>https://tunnelshade.in/</id><updated>2018-09-05T00:00:00+05:30</updated><entry><title>Internals of Hongfuzz - Intel PT</title><link href="https://tunnelshade.in/blog/2018/09/hongfuzz-intel-pt-instrumentation/" rel="alternate"></link><published>2018-09-05T00:00:00+05:30</published><updated>2018-09-05T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-09-05:/blog/2018/09/hongfuzz-intel-pt-instrumentation/</id><summary type="html">&lt;div class="section" id="tldr"&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="https://tunnelshade.in/" rel="alternate"></link><link href="https://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>https://tunnelshade.in/</id><updated>2018-12-02T00:00:00+05:30</updated><entry><title>Rinnegan - A distributed tracer for blackbox systems</title><link href="https://tunnelshade.in/blog/2018/12/rinnegan-walkthrough/" rel="alternate"></link><published>2018-12-02T00:00:00+05:30</published><updated>2018-12-02T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-12-02:/blog/2018/12/rinnegan-walkthrough/</id><summary type="html">&lt;div class="section" id="tldr"&gt;
+&lt;h2&gt;TLDR&lt;/h2&gt;
+&lt;p&gt;Rinnegan is a tool that I wrote for greatly reducing my time in understanding and reversing
+complex distributed systems. Source available at &lt;a class="reference external" href="https://github.com/tunnelshade/rinnegan"&gt;https://github.com/tunnelshade/rinnegan&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="background"&gt;
+&lt;h2&gt;1. Background&lt;/h2&gt;
+&lt;p&gt;Imagine a setup of Chef which has a server, message queues, distributed database, configuration system and many more processes running …&lt;/p&gt;&lt;/div&gt;</summary><content type="html">&lt;div class="section" id="tldr"&gt;
+&lt;h2&gt;TLDR&lt;/h2&gt;
+&lt;p&gt;Rinnegan is a tool that I wrote for greatly reducing my time in understanding and reversing
+complex distributed systems. Source available at &lt;a class="reference external" href="https://github.com/tunnelshade/rinnegan"&gt;https://github.com/tunnelshade/rinnegan&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="background"&gt;
+&lt;h2&gt;1. Background&lt;/h2&gt;
+&lt;p&gt;Imagine a setup of Chef which has a server, message queues, distributed database, configuration system and many more processes running on each of
+servers that run core chef infrastructure. Now, finding bugs in Chef is a lot easier if you can understand how it works and sadly chef being a
+product that sells, all it's inner workings are not publicly documented for us to read and understand.&lt;/p&gt;
+&lt;p&gt;So, I needed a way to visualize what components are running and what communications are happening between those components. Enter Rinnegan, named
+after most powerul eyes from Naruto verse.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="idea"&gt;
+&lt;h2&gt;2. Idea&lt;/h2&gt;
+&lt;p&gt;Rinnegan uses Grafana dashboards for visualizing and influxdb for storing data. A collection of scripts help in deploying/managing a small agent on
+all appliances of interest which help in collecting traces and do some basic tasks.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="walkthrough"&gt;
+&lt;h2&gt;3. Walkthrough&lt;/h2&gt;
+&lt;p&gt;Let us use Rinnegan to start reversing HDFS working.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;To start using rinnegan, we need to start rinnegan infrastructure (Influx database &amp;amp; dashboard servers). All required steps are handled by
+a Makefile. Currently, you need &lt;a class="reference external" href="https://github.com/golang/go/wiki/SettingGOPATH"&gt;GOPATH&lt;/a&gt; setup for cross compilation of agent binary.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ go get https://github.com/tunnelshade/rinnegan
+$ &lt;span class="nb"&gt;cd&lt;/span&gt; &lt;span class="nv"&gt;$GOPATH&lt;/span&gt;/src/github.com/tunnelshade/rinnegan/infrastructure
+$ make start
+
+$ docker ps --format&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;{{.Names}}&amp;quot;&lt;/span&gt;
+
+grafana
+influxdb
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="2"&gt;
+&lt;li&gt;Visit &lt;a class="reference external" href="http:/"&gt;http:/&lt;/a&gt;/&amp;lt;localhostname&amp;gt;:3000 on your browser and use default credentials &lt;tt class="docutils literal"&gt;admin:admin&lt;/tt&gt; to login. Navigate to rinnegan dashboard and you
+should see something like below.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_empty.png" /&gt;
+&lt;ol class="arabic simple" start="3"&gt;
+&lt;li&gt;We need a test hdfs setup to play around. I highly recommend using docker instances as they tend to not have noisy system processes and traffic.
+Let us use &lt;a class="reference external" href="https://github.com/flokkr/runtime-compose/tree/master/hdfs/viewfs"&gt;runtime-compose&lt;/a&gt; setup here.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git clone https://github.com/flokkr/runtime-compose.git
+$ &lt;span class="nb"&gt;cd&lt;/span&gt; runtime-compose/hdfs/viewfs
+$ docker-compose up -d
+
+$ docker ps --format&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;{{.Names}}&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; grep viewfs
+
+viewfs_datanodex_1
+viewfs_nny_1
+viewfs_nnx_1
+viewfs_datanodey_1
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="4"&gt;
+&lt;li&gt;To do any operation on target containers/hosts, &lt;tt class="docutils literal"&gt;./bin/rinnegan.sh&lt;/tt&gt; is the right utility. To use it, we need to fix two files present in
+&lt;tt class="docutils literal"&gt;samples/&lt;/tt&gt; directory. &lt;tt class="docutils literal"&gt;hosts&lt;/tt&gt; file is used to list one target per line. &lt;tt class="docutils literal"&gt;variables&lt;/tt&gt; has some necessary environment variables set, fix them
+accordingly.&lt;/li&gt;
+&lt;li&gt;In current example, we are dealing with containers so hosts file should have names of all containers. Enable environment variable &lt;tt class="docutils literal"&gt;RINNEGAN_DOCKER&lt;/tt&gt;
+in variables to true and source it out.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker ps --format&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;{{.Names}}&amp;quot;&lt;/span&gt; &amp;gt; ./samples/hosts
+$ &lt;span class="nb"&gt;source&lt;/span&gt; ./samples/variables
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="6"&gt;
+&lt;li&gt;Once sucessfully setup, running help should work.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh --help
+
+Usage: rinnegan &amp;lt;host_regex&amp;gt; &lt;span class="o"&gt;[&lt;/span&gt;agent&lt;span class="p"&gt;|&lt;/span&gt;deploy&lt;span class="p"&gt;|&lt;/span&gt;list&lt;span class="p"&gt;|&lt;/span&gt;stop&lt;span class="p"&gt;|&lt;/span&gt;wipe&lt;span class="p"&gt;|&lt;/span&gt;exec&lt;span class="o"&gt;]&lt;/span&gt;
+
+       &amp;lt;host_regex&amp;gt;  grep regex that will be applied to filter hosts
+
+          agent    Interact with agents deployed on targets
+          deploy   Deploy agents on to targets
+          list     List all active agents
+          stop     Stop all active agents
+          wipe     Remove any file leftovers on targets, run after stopping
+          &lt;span class="nb"&gt;exec&lt;/span&gt;     Run commands on targets directly, nothing fancy
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="7"&gt;
+&lt;li&gt;Let us compile agent to be deployed. As all containers in this example are linux, just run &lt;tt class="docutils literal"&gt;make linux_agent&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;Time to deploy our agents and check if agent is running. Ignore any warnings of missing dependencies for modules.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;.&amp;quot;&lt;/span&gt; deploy
+$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;.&amp;quot;&lt;/span&gt; list
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="9"&gt;
+&lt;li&gt;Many times there is a necessity to run some commands on all the targets, this is easily possible in rinnegan. Let us see how to
+do that by installing procps on all containers.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_exec.png" /&gt;
+&lt;ol class="arabic simple" start="10"&gt;
+&lt;li&gt;Let us see, what all processes are run as part of a hdfs setup. Once command is run, checkout dashboard to see
+data over there.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;.&amp;quot;&lt;/span&gt; agent module run ps
+&lt;/pre&gt;&lt;/div&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_ps.png" /&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_ps_dashboard.png" /&gt;
+&lt;ol class="arabic simple" start="11"&gt;
+&lt;li&gt;Namenodes (nnx &amp;amp; nny) seem to have main process under pid 125. Let us trace it's network calls. For this we will be needing
+strace module, hence let us install it first only on nnx.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; &lt;span class="nb"&gt;exec&lt;/span&gt; apk add strace
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="12"&gt;
+&lt;li&gt;Even after installing it, we do not see &lt;tt class="docutils literal"&gt;strace&lt;/tt&gt; module. This way rinnegan is quite verbose in telling what is missing,
+which in this case is wrong &lt;em&gt;ptrace_scope&lt;/em&gt; value. Let us start strace module as well.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;.&amp;quot;&lt;/span&gt; &lt;span class="nb"&gt;exec&lt;/span&gt; sysctl -w kernel.yama.ptrace_scope&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
+$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent module run strace &lt;span class="m"&gt;125&lt;/span&gt; &lt;span class="nv"&gt;trace&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;desc
+&lt;/pre&gt;&lt;/div&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_strace.png" /&gt;
+&lt;ol class="arabic simple" start="13"&gt;
+&lt;li&gt;Dashboard should now be showing network traffic graphs and syscall traces in &lt;em&gt;Network panel&lt;/em&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_strace_desc.png" /&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_strace_content.png" /&gt;
+&lt;ol class="arabic simple" start="14"&gt;
+&lt;li&gt;It seems to be some kind of heartbeat, so let us stop this network tracer and find out which host is connecting to it.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent module list
+$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent module stop &lt;span class="nv"&gt;strace_trace&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;desc_125
+&lt;/pre&gt;&lt;/div&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_strace_stop.png" /&gt;
+&lt;ol class="arabic simple" start="15"&gt;
+&lt;li&gt;Since this seems to be a server listening, let us look for ESTABLISHED connections of this process using netstat module.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent module run netstat &lt;span class="m"&gt;125&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_netstat_run.png" /&gt;
+&lt;ol class="arabic simple" start="16"&gt;
+&lt;li&gt;Dashboard should be showing connections, from which we can deduce using &lt;strong&gt;raddr&lt;/strong&gt; column that host &lt;em&gt;064c7310222b&lt;/em&gt; is the one
+talking to our nnx.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_netstat.png" /&gt;
+&lt;ol class="arabic simple" start="17"&gt;
+&lt;li&gt;Stop netstat module and start network tracing &lt;strong&gt;nnx&lt;/strong&gt; (pid: 125) &amp;amp; &lt;strong&gt;064c7310222b&lt;/strong&gt; (pid: 68). Pids can be easily obtained from
+process panel. Pay attention that hostname is not always equal to container name that is used in targets list.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent module run strace &lt;span class="m"&gt;125&lt;/span&gt; &lt;span class="nv"&gt;trace&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;desc
+$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nodex&amp;quot;&lt;/span&gt; agent module run strace &lt;span class="m"&gt;68&lt;/span&gt; &lt;span class="nv"&gt;trace&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;desc
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic simple" start="18"&gt;
+&lt;li&gt;It is deducible that both hosts have a heartbeat kind of interaction in idle state. Filtering out on hosts should help remove
+remainder host's graphs. Best part is that dragging a rectangle on those graphs to include two spikes will modify timerange
+and you will only see syscall traces during that period.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/rinnegan_network.png" /&gt;
+&lt;ol class="arabic simple" start="19"&gt;
+&lt;li&gt;What next? Just enable tracers and try writing a file to hdfs to see how file blocks are written.&lt;/li&gt;
+&lt;li&gt;So, just pick any containerised blackbox distributed system and go about finding bugs by understading communications.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="section" id="capabilities"&gt;
+&lt;h2&gt;4. Capabilities&lt;/h2&gt;
+&lt;p&gt;What else is rinnegan capable of doing?&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Use iptables to easily redirect traffic between components to live tamper with traffic &lt;tt class="docutils literal"&gt;agent iptables &lt;span class="pre"&gt;--help&lt;/span&gt;&lt;/tt&gt;. A good http
+reverse proxy is &lt;tt class="docutils literal"&gt;mitmproxy&lt;/tt&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent iptables --help
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Use frida to run scripts like ssl-bypass for mitming ssl traffic. Rinnegan comes with cert check bypass script
+for openssl. Frida scripts are present in &lt;tt class="docutils literal"&gt;build/frida/&lt;/tt&gt;, adding a new script there requires you to redeploy
+or get that script to target and then just use script name without extension.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; &lt;span class="nb"&gt;exec&lt;/span&gt; apk add py-pip
+$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; &lt;span class="nb"&gt;exec&lt;/span&gt; pip install frida-tools
+$ ./bin/rinnegan.sh &lt;span class="s2"&gt;&amp;quot;nnx&amp;quot;&lt;/span&gt; agent module run frida &lt;span class="m"&gt;125&lt;/span&gt; ssl-bypass
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="last-word"&gt;
+&lt;h2&gt;5. Last word&lt;/h2&gt;
+&lt;p&gt;Rinnegan is a very experimental software which gets feature as and when I need them, but it has been super helpful in reversing
+some complex blackbox systems. It was built to solve my constant frustration of having to check processes, trace them, redirect
+traffic and tamper with those.&lt;/p&gt;
+&lt;p&gt;If something seems to be not working&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Wipe agent from particular target.&lt;/li&gt;
+&lt;li&gt;Kill rinnegan related processes (HINT: Use exec).&lt;/li&gt;
+&lt;li&gt;Redeploy agent and resume.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+</content><category term="reversing"></category><category term="tools"></category></entry><entry><title>Internals of Hongfuzz - Intel PT</title><link href="https://tunnelshade.in/blog/2018/09/hongfuzz-intel-pt-instrumentation/" rel="alternate"></link><published>2018-09-05T00:00:00+05:30</published><updated>2018-09-05T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-09-05:/blog/2018/09/hongfuzz-intel-pt-instrumentation/</id><summary type="html">&lt;div class="section" id="tldr"&gt;
 &lt;h2&gt;TLDR&lt;/h2&gt;
 &lt;p&gt;Intel Processor Trace is a hardware level execution tracing utility provided by Intel. The information provided is highly compressed allowing
 passing of granular information. So, instead of using QEMU for coverage guided blackbox fuzzing, Intel-PT should provide a rather performant
@@ -1368,7 +1561,7 @@ only one place to keep my songs and I can enjoy them everywhere.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;To load this module everytime at boot, just add it to &lt;code&gt;/etc/modules&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# echo &amp;quot;snd_bcm2835&amp;quot; &amp;gt;&amp;gt; /etc/modules&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# echo &amp;quot;snd_bcm2835&amp;quot; &amp;amp;gt;&amp;amp;gt; /etc/modules&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1556,7 +1749,7 @@ will only run flashbang on unprocessed files.&lt;/p&gt;
 &lt;li&gt;
 &lt;p&gt;The output for each flash file is written to a text file with the same name. For a vulnerable &lt;strong&gt;ZeroClipboard.swf&lt;/strong&gt;, we have
 the following &lt;strong&gt;ZeroClipboard.txt&lt;/strong&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&amp;gt; ZeroClipboard.txt &amp;lt;&lt;span class="o"&gt;==&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;gt&lt;span class="p"&gt;;&lt;/span&gt; ZeroClipboard.txt &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;lt&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;
 &lt;span class="o"&gt;========================&lt;/span&gt;
 Detected Flash &lt;span class="nv"&gt;variables&lt;/span&gt;
 &lt;span class="o"&gt;========================&lt;/span&gt;
@@ -1578,11 +1771,11 @@ Sink
 ---------
 Sink Data
 ---------
-try &lt;span class="o"&gt;{&lt;/span&gt;__flash__toXML&lt;span class="o"&gt;(&lt;/span&gt;ZeroClipboard.dispatch&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;someDummyPayloadWhichHasToBeThereInOnePiece&amp;quot;&lt;/span&gt;,&lt;span class="s2"&gt;&amp;quot;load&amp;quot;&lt;/span&gt;,null&lt;span class="o"&gt;))&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt; catch &lt;span class="o"&gt;(&lt;/span&gt;e&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;lt;undefined/&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
+try &lt;span class="o"&gt;{&lt;/span&gt;__flash__toXML&lt;span class="o"&gt;(&lt;/span&gt;ZeroClipboard.dispatch&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;someDummyPayloadWhichHasToBeThereInOnePiece&amp;quot;&lt;/span&gt;,&lt;span class="s2"&gt;&amp;quot;load&amp;quot;&lt;/span&gt;,null&lt;span class="o"&gt;))&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt; catch &lt;span class="o"&gt;(&lt;/span&gt;e&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;amp;lt;undefined/&amp;amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
 ------------------
 Replaced Sink Data
 ------------------
-try &lt;span class="o"&gt;{&lt;/span&gt;__flash__toXML&lt;span class="o"&gt;(&lt;/span&gt;ZeroClipboard.dispatch&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;@@@id@@@&amp;quot;&lt;/span&gt;,&lt;span class="s2"&gt;&amp;quot;load&amp;quot;&lt;/span&gt;,null&lt;span class="o"&gt;))&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt; catch &lt;span class="o"&gt;(&lt;/span&gt;e&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;lt;undefined/&amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
+try &lt;span class="o"&gt;{&lt;/span&gt;__flash__toXML&lt;span class="o"&gt;(&lt;/span&gt;ZeroClipboard.dispatch&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;@@@id@@@&amp;quot;&lt;/span&gt;,&lt;span class="s2"&gt;&amp;quot;load&amp;quot;&lt;/span&gt;,null&lt;span class="o"&gt;))&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt; catch &lt;span class="o"&gt;(&lt;/span&gt;e&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;amp;lt;undefined/&amp;amp;gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;
 -------------------
 Vulnerable variable
 -------------------
@@ -2029,7 +2222,7 @@ not required. &lt;strong&gt;WHY?&lt;/strong&gt;&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;exec i3
 
 # If you wish to log to a file
-exec i3 -V &amp;gt;&amp;gt; ~/.i3/i3log 2&amp;gt;&amp;amp;1
+exec i3 -V &amp;amp;gt;&amp;amp;gt; ~/.i3/i3log 2&amp;amp;gt;&amp;amp;amp;1
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -2180,7 +2373,7 @@ so I need &lt;strong&gt;gtk-engine-murrine&lt;/strong&gt;. Now, your gtk apps mu
 &lt;li&gt;Install and enable autoload of some plugins ( &lt;strong&gt;beep.pl&lt;/strong&gt; , &lt;strong&gt;buffers.pl&lt;/strong&gt; etc..).&lt;/li&gt;
 &lt;li&gt;Make sure, your terminal emulator responds to urgent bell. In terminator, set &lt;strong&gt;Terminal bell&lt;/strong&gt; to &lt;strong&gt;Window List Flash&lt;/strong&gt;. To simulate bell&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;echo -ne &amp;#39;\e&amp;#39;
 
-# Sleep &amp;amp; change workspace to see the effect
+# Sleep &amp;amp;amp; change workspace to see the effect
 sleep 5; echo -ne &amp;#39;\e&amp;#39;
 &lt;/pre&gt;&lt;/div&gt;
 

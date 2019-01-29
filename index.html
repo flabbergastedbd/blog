@@ -132,25 +132,24 @@
 <article class="hentry">
 <div class="pure-g"><div class="pure-u-1">
     <header><h3 class="entry-title">
-        <time class="published" datetime="2018-09-05T00:00:00+05:30"> [05-09-18] </time>
-        <a href="https://tunnelshade.in/blog/2018/09/hongfuzz-intel-pt-instrumentation/" rel="bookmark" title="Permalink to Internals of Hongfuzz - Intel PT">Internals of Hongfuzz - Intel PT</a>
+        <time class="published" datetime="2018-12-02T00:00:00+05:30"> [02-12-18] </time>
+        <a href="https://tunnelshade.in/blog/2018/12/rinnegan-walkthrough/" rel="bookmark" title="Permalink to Rinnegan - A distributed tracer for blackbox systems">Rinnegan - A distributed tracer for blackbox systems</a>
         [Tools]
     </h3></header>
 </div></div>
 <div class="pure-g">
   <div class="pure-u-3-24">
-<img src="https://raw.githubusercontent.com/google/honggfuzz/master/screenshot-honggfuzz-1.png" class="pure-img">  </div>
+<img src="/images/rinnegan_network.png" class="pure-img">  </div>
   <div class="pure-u-1-24"></div>
   <div class="pure-u-20-24">
     <div class="entry-content"> <div class="section" id="tldr">
 <h2>TLDR</h2>
-<p>Intel Processor Trace is a hardware level execution tracing utility provided by Intel. The information provided is highly compressed allowing
-passing of granular information. So, instead of using QEMU for coverage guided blackbox fuzzing, Intel-PT should provide a rather performant
-way.</p>
+<p>Rinnegan is a tool that I wrote for greatly reducing my time in understanding and reversing
+complex distributed systems. Source available at <a class="reference external" href="https://github.com/tunnelshade/rinnegan">https://github.com/tunnelshade/rinnegan</a>.</p>
 </div>
-<div class="section" id="recap">
-<h2>Recap</h2>
-<p>Before proceeding further, it is recommended to …</p></div> </div><!-- /.entry-content -->
+<div class="section" id="background">
+<h2>1. Background</h2>
+<p>Imagine a setup of Chef which has a server, message queues, distributed database, configuration system and many more processes running …</p></div> </div><!-- /.entry-content -->
   </div>
 </div>
 </article>      </fieldset>

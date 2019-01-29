@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>bharadwaj.machiraju</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="https://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="reversing" />
+    <meta name="tags" content="tools" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" integrity="sha384-b92sF+wDNTHrfEtRaYo+EpcA8FUyHOSXrdxKc9XB9kaaX1rSQAgMevW6cYeE5Bdv" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="https://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <br>
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-md-20-24 pure-u-lg-20-24 pure-u-sm-24-24" style="display: flex; align-items: center;">
+            <h1>
+              <a href="https://tunnelshade.in/">bharadwaj.machiraju </a>   &raquo; <a href="https://tunnelshade.in/blog/index.html">Blog</a> <a href="https://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+            </h1>
+        </div>
+        <div class="pure-u-md-4-24 pure-u-lg-4-24 pure-u-sm-0-24" style="display: flex; align-items: center;">
+          <img class="logo" src="https://tunnelshade.in/theme/images/logo.png"/>
+        </div>
+      </div>
+      <br>
+      <hr>
+      <br>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-4-5 pure-u-lg-4-5 pure-u-xl-4-5">
+<section id="content" class="body">
+  <header class="pure-g"><div class="pure-u-1">
+    <h2 class="entry-title">
+      <a href="https://tunnelshade.in/blog/2018/12/rinnegan-walkthrough/" rel="bookmark"
+         title="Permalink to Rinnegan - A distributed tracer for blackbox systems">Rinnegan - A distributed tracer for blackbox systems</a></h2>
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
+
+    <time class="published" datetime="2018-12-02T00:00:00+05:30">
+      [02-12-18]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [reversing,tools]
+
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
+    <div class="section" id="tldr">
+<h2>TLDR</h2>
+<p>Rinnegan is a tool that I wrote for greatly reducing my time in understanding and reversing
+complex distributed systems. Source available at <a class="reference external" href="https://github.com/tunnelshade/rinnegan">https://github.com/tunnelshade/rinnegan</a>.</p>
+</div>
+<div class="section" id="background">
+<h2>1. Background</h2>
+<p>Imagine a setup of Chef which has a server, message queues, distributed database, configuration system and many more processes running on each of
+servers that run core chef infrastructure. Now, finding bugs in Chef is a lot easier if you can understand how it works and sadly chef being a
+product that sells, all it's inner workings are not publicly documented for us to read and understand.</p>
+<p>So, I needed a way to visualize what components are running and what communications are happening between those components. Enter Rinnegan, named
+after most powerul eyes from Naruto verse.</p>
+</div>
+<div class="section" id="idea">
+<h2>2. Idea</h2>
+<p>Rinnegan uses Grafana dashboards for visualizing and influxdb for storing data. A collection of scripts help in deploying/managing a small agent on
+all appliances of interest which help in collecting traces and do some basic tasks.</p>
+</div>
+<div class="section" id="walkthrough">
+<h2>3. Walkthrough</h2>
+<p>Let us use Rinnegan to start reversing HDFS working.</p>
+<ol class="arabic simple">
+<li>To start using rinnegan, we need to start rinnegan infrastructure (Influx database &amp; dashboard servers). All required steps are handled by
+a Makefile. Currently, you need <a class="reference external" href="https://github.com/golang/go/wiki/SettingGOPATH">GOPATH</a> setup for cross compilation of agent binary.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ go get https://github.com/tunnelshade/rinnegan
+$ <span class="nb">cd</span> <span class="nv">$GOPATH</span>/src/github.com/tunnelshade/rinnegan/infrastructure
+$ make start
+
+$ docker ps --format<span class="o">=</span><span class="s2">&quot;{{.Names}}&quot;</span>
+
+grafana
+influxdb
+</pre></div>
+<ol class="arabic simple" start="2">
+<li>Visit <a class="reference external" href="http:/">http:/</a>/&lt;localhostname&gt;:3000 on your browser and use default credentials <tt class="docutils literal">admin:admin</tt> to login. Navigate to rinnegan dashboard and you
+should see something like below.</li>
+</ol>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_empty.png" />
+<ol class="arabic simple" start="3">
+<li>We need a test hdfs setup to play around. I highly recommend using docker instances as they tend to not have noisy system processes and traffic.
+Let us use <a class="reference external" href="https://github.com/flokkr/runtime-compose/tree/master/hdfs/viewfs">runtime-compose</a> setup here.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ git clone https://github.com/flokkr/runtime-compose.git
+$ <span class="nb">cd</span> runtime-compose/hdfs/viewfs
+$ docker-compose up -d
+
+$ docker ps --format<span class="o">=</span><span class="s2">&quot;{{.Names}}&quot;</span> <span class="p">|</span> grep viewfs
+
+viewfs_datanodex_1
+viewfs_nny_1
+viewfs_nnx_1
+viewfs_datanodey_1
+</pre></div>
+<ol class="arabic simple" start="4">
+<li>To do any operation on target containers/hosts, <tt class="docutils literal">./bin/rinnegan.sh</tt> is the right utility. To use it, we need to fix two files present in
+<tt class="docutils literal">samples/</tt> directory. <tt class="docutils literal">hosts</tt> file is used to list one target per line. <tt class="docutils literal">variables</tt> has some necessary environment variables set, fix them
+accordingly.</li>
+<li>In current example, we are dealing with containers so hosts file should have names of all containers. Enable environment variable <tt class="docutils literal">RINNEGAN_DOCKER</tt>
+in variables to true and source it out.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ docker ps --format<span class="o">=</span><span class="s2">&quot;{{.Names}}&quot;</span> &gt; ./samples/hosts
+$ <span class="nb">source</span> ./samples/variables
+</pre></div>
+<ol class="arabic simple" start="6">
+<li>Once sucessfully setup, running help should work.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh --help
+
+Usage: rinnegan &lt;host_regex&gt; <span class="o">[</span>agent<span class="p">|</span>deploy<span class="p">|</span>list<span class="p">|</span>stop<span class="p">|</span>wipe<span class="p">|</span>exec<span class="o">]</span>
+
+       &lt;host_regex&gt;  grep regex that will be applied to filter hosts
+
+          agent    Interact with agents deployed on targets
+          deploy   Deploy agents on to targets
+          list     List all active agents
+          stop     Stop all active agents
+          wipe     Remove any file leftovers on targets, run after stopping
+          <span class="nb">exec</span>     Run commands on targets directly, nothing fancy
+</pre></div>
+<ol class="arabic simple" start="7">
+<li>Let us compile agent to be deployed. As all containers in this example are linux, just run <tt class="docutils literal">make linux_agent</tt>.</li>
+<li>Time to deploy our agents and check if agent is running. Ignore any warnings of missing dependencies for modules.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;.&quot;</span> deploy
+$ ./bin/rinnegan.sh <span class="s2">&quot;.&quot;</span> list
+</pre></div>
+<ol class="arabic simple" start="9">
+<li>Many times there is a necessity to run some commands on all the targets, this is easily possible in rinnegan. Let us see how to
+do that by installing procps on all containers.</li>
+</ol>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_exec.png" />
+<ol class="arabic simple" start="10">
+<li>Let us see, what all processes are run as part of a hdfs setup. Once command is run, checkout dashboard to see
+data over there.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;.&quot;</span> agent module run ps
+</pre></div>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_ps.png" />
+<img alt="" src="https://tunnelshade.in/images/rinnegan_ps_dashboard.png" />
+<ol class="arabic simple" start="11">
+<li>Namenodes (nnx &amp; nny) seem to have main process under pid 125. Let us trace it's network calls. For this we will be needing
+strace module, hence let us install it first only on nnx.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> <span class="nb">exec</span> apk add strace
+</pre></div>
+<ol class="arabic simple" start="12">
+<li>Even after installing it, we do not see <tt class="docutils literal">strace</tt> module. This way rinnegan is quite verbose in telling what is missing,
+which in this case is wrong <em>ptrace_scope</em> value. Let us start strace module as well.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;.&quot;</span> <span class="nb">exec</span> sysctl -w kernel.yama.ptrace_scope<span class="o">=</span><span class="m">0</span>
+$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent module run strace <span class="m">125</span> <span class="nv">trace</span><span class="o">=</span>desc
+</pre></div>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_strace.png" />
+<ol class="arabic simple" start="13">
+<li>Dashboard should now be showing network traffic graphs and syscall traces in <em>Network panel</em>.</li>
+</ol>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_strace_desc.png" />
+<img alt="" src="https://tunnelshade.in/images/rinnegan_strace_content.png" />
+<ol class="arabic simple" start="14">
+<li>It seems to be some kind of heartbeat, so let us stop this network tracer and find out which host is connecting to it.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent module list
+$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent module stop <span class="nv">strace_trace</span><span class="o">=</span>desc_125
+</pre></div>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_strace_stop.png" />
+<ol class="arabic simple" start="15">
+<li>Since this seems to be a server listening, let us look for ESTABLISHED connections of this process using netstat module.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent module run netstat <span class="m">125</span>
+</pre></div>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_netstat_run.png" />
+<ol class="arabic simple" start="16">
+<li>Dashboard should be showing connections, from which we can deduce using <strong>raddr</strong> column that host <em>064c7310222b</em> is the one
+talking to our nnx.</li>
+</ol>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_netstat.png" />
+<ol class="arabic simple" start="17">
+<li>Stop netstat module and start network tracing <strong>nnx</strong> (pid: 125) &amp; <strong>064c7310222b</strong> (pid: 68). Pids can be easily obtained from
+process panel. Pay attention that hostname is not always equal to container name that is used in targets list.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent module run strace <span class="m">125</span> <span class="nv">trace</span><span class="o">=</span>desc
+$ ./bin/rinnegan.sh <span class="s2">&quot;nodex&quot;</span> agent module run strace <span class="m">68</span> <span class="nv">trace</span><span class="o">=</span>desc
+</pre></div>
+<ol class="arabic simple" start="18">
+<li>It is deducible that both hosts have a heartbeat kind of interaction in idle state. Filtering out on hosts should help remove
+remainder host's graphs. Best part is that dragging a rectangle on those graphs to include two spikes will modify timerange
+and you will only see syscall traces during that period.</li>
+</ol>
+<img alt="" src="https://tunnelshade.in/images/rinnegan_network.png" />
+<ol class="arabic simple" start="19">
+<li>What next? Just enable tracers and try writing a file to hdfs to see how file blocks are written.</li>
+<li>So, just pick any containerised blackbox distributed system and go about finding bugs by understading communications.</li>
+</ol>
+</div>
+<div class="section" id="capabilities">
+<h2>4. Capabilities</h2>
+<p>What else is rinnegan capable of doing?</p>
+<ul class="simple">
+<li>Use iptables to easily redirect traffic between components to live tamper with traffic <tt class="docutils literal">agent iptables <span class="pre">--help</span></tt>. A good http
+reverse proxy is <tt class="docutils literal">mitmproxy</tt>.</li>
+</ul>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent iptables --help
+</pre></div>
+<ul class="simple">
+<li>Use frida to run scripts like ssl-bypass for mitming ssl traffic. Rinnegan comes with cert check bypass script
+for openssl. Frida scripts are present in <tt class="docutils literal">build/frida/</tt>, adding a new script there requires you to redeploy
+or get that script to target and then just use script name without extension.</li>
+</ul>
+<div class="highlight"><pre><span></span>$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> <span class="nb">exec</span> apk add py-pip
+$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> <span class="nb">exec</span> pip install frida-tools
+$ ./bin/rinnegan.sh <span class="s2">&quot;nnx&quot;</span> agent module run frida <span class="m">125</span> ssl-bypass
+</pre></div>
+</div>
+<div class="section" id="last-word">
+<h2>5. Last word</h2>
+<p>Rinnegan is a very experimental software which gets feature as and when I need them, but it has been super helpful in reversing
+some complex blackbox systems. It was built to solve my constant frustration of having to check processes, trace them, redirect
+traffic and tamper with those.</p>
+<p>If something seems to be not working</p>
+<ul class="simple">
+<li>Wipe agent from particular target.</li>
+<li>Kill rinnegan related processes (HINT: Use exec).</li>
+<li>Redeploy agent and resume.</li>
+</ul>
+</div>
+
+  </div></div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1 pure-u-md-1-5 pure-u-lg-1-5 pure-u-xl-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [4]</li>
+          <li><a href="/category/tools/">Tools</a> [12]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/reversing/">reversing</a> [5]</li>
+          <li><a href="/tag/tools/">tools</a> [11]</li>
+          <li><a href="/tag/fuzzing/">fuzzing</a> [3]</li>
+          <li><a href="/tag/afl/">afl</a> [2]</li>
+          <li><a href="/tag/tricks/">tricks</a> [11]</li>
+          <li><a href="/tag/info/">info</a> [12]</li>
+          <li><a href="/tag/python/">python</a> [3]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="domain@gmail.com"><i class="fa fa-envelope"></i> domain@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>
