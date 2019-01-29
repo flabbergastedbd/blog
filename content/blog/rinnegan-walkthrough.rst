@@ -3,7 +3,7 @@
 :title: Rinnegan - A distributed tracer for blackbox systems
 :category: Tools
 :tags: reversing, tools
-:image: https://raw.githubusercontent.com/google/honggfuzz/master/screenshot-honggfuzz-1.png
+:image: /images/rinnegan_network.png
 
 TLDR
 ====
@@ -31,11 +31,29 @@ all appliances of interest which help in collecting traces and do some basic tas
 3. Walkthrough
 ==============
 
-Let us use Rinnegan to start reversing HDFS Namenode and Datanode communications.
+Let us use Rinnegan to start reversing HDFS working.
 
-1. First we need to setup either docker or real instances of HDFS to use rinnegan. I highly recommend using docker instances as they tend to not
-   have noisy system processes and traffic. Let us use `runtime-compose <https://github.com/flokkr/runtime-compose/tree/master/hdfs/viewfs>`_
-   setup here.
+1. To start using rinnegan, we need to start rinnegan infrastructure (Influx database & dashboard servers). All required steps are handled by
+   a Makefile. Currently, you need `GOPATH <https://github.com/golang/go/wiki/SettingGOPATH>`_ setup for cross compilation of agent binary.
+
+.. code-block:: bash
+
+   $ go get https://github.com/tunnelshade/rinnegan
+   $ cd $GOPATH/src/github.com/tunnelshade/rinnegan/infrastructure
+   $ make start
+
+   $ docker ps --format="{{.Names}}"
+
+   grafana
+   influxdb
+
+2. Visit http://<localhostname>:3000 on your browser and use default credentials ``admin:admin`` to login. Navigate to rinnegan dashboard and you
+   should see something like below.
+
+.. image:: {static}/images/rinnegan_empty.png
+
+3. We need a test hdfs setup to play around. I highly recommend using docker instances as they tend to not have noisy system processes and traffic.
+   Let us use `runtime-compose <https://github.com/flokkr/runtime-compose/tree/master/hdfs/viewfs>`_ setup here.
 
 .. code-block:: bash
 
@@ -43,26 +61,160 @@ Let us use Rinnegan to start reversing HDFS Namenode and Datanode communications
    $ cd runtime-compose/hdfs/viewfs
    $ docker-compose up -d
 
-   $ docker ps
+   $ docker ps --format="{{.Names}}" | grep viewfs
 
-   CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                                                                NAMES
-   5edb424b46eb        flokkr/hadoop:latest              "/usr/local/bin/dumb…"   11 seconds ago      Up 9 seconds        0.0.0.0:9870->9870/tcp                                               viewfs_nnx_1_425c196281b7
-   05a31cf76a62        flokkr/hadoop:latest              "/usr/local/bin/dumb…"   11 seconds ago      Up 9 seconds                                                                             viewfs_datanodex_1_5179126eae48
-   2d2f2c1ef143        flokkr/hadoop:latest              "/usr/local/bin/dumb…"   11 seconds ago      Up 9 seconds                                                                             viewfs_datanodey_1_1918ad4bf599
-   2b64e94ac21a        flokkr/hadoop:latest              "/usr/local/bin/dumb…"   11 seconds ago      Up 9 seconds        0.0.0.0:9871->9870/tcp                                               viewfs_nny_1_db43ab680275
+   viewfs_datanodex_1
+   viewfs_nny_1
+   viewfs_nnx_1
+   viewfs_datanodey_1
 
-2. To start using rinnegan, we need to start rinnegan infrastructure
+4. To do any operation on target containers/hosts, ``./bin/rinnegan.sh`` is the right utility. To use it, we need to fix two files present in
+   ``samples/`` directory. ``hosts`` file is used to list one target per line. ``variables`` has some necessary environment variables set, fix them
+   accordingly.
+
+5. In current example, we are dealing with containers so hosts file should have names of all containers. Enable environment variable ``RINNEGAN_DOCKER``
+   in variables to true and source it out.
 
 .. code-block:: bash
 
-   $ git clone https://github.com/tunnelshade/rinnegan
-   $ cd rinnegan/infrastructure
-   $ make start
+   $ docker ps --format="{{.Names}}" > ./samples/hosts
+   $ source ./samples/variables
 
-   $ docker ps
+6. Once sucessfully setup, running help should work.
 
-   CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                                                                NAMES
-   1173cd248fcd        grafana/grafana:5.2.4             "/run.sh"                21 minutes ago      Up 21 minutes       0.0.0.0:3000->3000/tcp                                               grafana
-   524b5a9b9615        influxdb:1.6                      "/entrypoint.sh infl…"   21 minutes ago      Up 21 minutes       0.0.0.0:2003->2003/tcp, 0.0.0.0:8086->8086/tcp                       influxdb
+.. code-block:: bash
 
-3. Visit http://localhost:3000 in your browser and use default credentials ``admin:admin`` to login and go to rinnegan dashboard.
+   $ ./bin/rinnegan.sh --help
+
+   Usage: rinnegan <host_regex> [agent|deploy|list|stop|wipe|exec]
+
+	  <host_regex>  grep regex that will be applied to filter hosts
+
+	     agent    Interact with agents deployed on targets
+	     deploy   Deploy agents on to targets
+	     list     List all active agents
+	     stop     Stop all active agents
+	     wipe     Remove any file leftovers on targets, run after stopping
+	     exec     Run commands on targets directly, nothing fancy
+
+7. Let us compile agent to be deployed. As all containers in this example are linux, just run ``make linux_agent``.
+8. Time to deploy our agents and check if agent is running. Ignore any warnings of missing dependencies for modules.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "." deploy
+   $ ./bin/rinnegan.sh "." list
+
+9. Many times there is a necessity to run some commands on all the targets, this is easily possible in rinnegan. Let us see how to
+   do that by installing procps on all containers.
+
+.. image:: {static}/images/rinnegan_exec.png
+
+10. Let us see, what all processes are run as part of a hdfs setup. Once command is run, checkout dashboard to see
+    data over there.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "." agent module run ps
+
+.. image:: {static}/images/rinnegan_ps.png
+
+
+.. image:: {static}/images/rinnegan_ps_dashboard.png
+
+11. Namenodes (nnx & nny) seem to have main process under pid 125. Let us trace it's network calls. For this we will be needing
+    strace module, hence let us install it first only on nnx.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "nnx" exec apk add strace
+
+12. Even after installing it, we do not see ``strace`` module. This way rinnegan is quite verbose in telling what is missing,
+    which in this case is wrong *ptrace_scope* value. Let us start strace module as well.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "." exec sysctl -w kernel.yama.ptrace_scope=0
+   $ ./bin/rinnegan.sh "nnx" agent module run strace 125 trace=desc
+
+.. image:: {static}/images/rinnegan_strace.png
+
+13. Dashboard should now be showing network traffic graphs and syscall traces in *Network panel*.
+
+.. image:: {static}/images/rinnegan_strace_desc.png
+
+.. image:: {static}/images/rinnegan_strace_content.png
+
+14. It seems to be some kind of heartbeat, so let us stop this network tracer and find out which host is connecting to it.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "nnx" agent module list
+   $ ./bin/rinnegan.sh "nnx" agent module stop strace_trace=desc_125
+
+.. image:: {static}/images/rinnegan_strace_stop.png
+
+15. Since this seems to be a server listening, let us look for ESTABLISHED connections of this process using netstat module.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "nnx" agent module run netstat 125
+
+.. image:: {static}/images/rinnegan_netstat_run.png
+
+16. Dashboard should be showing connections, from which we can deduce using **raddr** column that host *064c7310222b* is the one
+    talking to our nnx.
+
+.. image:: {static}/images/rinnegan_netstat.png
+
+17. Stop netstat module and start network tracing **nnx** (pid: 125) & **064c7310222b** (pid: 68). Pids can be easily obtained from
+    process panel. Pay attention that hostname is not always equal to container name that is used in targets list.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "nnx" agent module run strace 125 trace=desc
+   $ ./bin/rinnegan.sh "nodex" agent module run strace 68 trace=desc
+
+18. It is deducible that both hosts have a heartbeat kind of interaction in idle state. Filtering out on hosts should help remove
+    remainder host's graphs. Best part is that dragging a rectangle on those graphs to include two spikes will modify timerange
+    and you will only see syscall traces during that period.
+
+.. image:: {static}/images/rinnegan_network.png
+
+19. What next? Just enable tracers and try writing a file to hdfs to see how file blocks are written.
+20. So, just pick any containerised blackbox distributed system and go about finding bugs by understading communications.
+
+4. Capabilities
+===============
+
+What else is rinnegan capable of doing?
+
+* Use iptables to easily redirect traffic between components to live tamper with traffic ``agent iptables --help``. A good http
+  reverse proxy is ``mitmproxy``.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "nnx" agent iptables --help
+
+* Use frida to run scripts like ssl-bypass for mitming ssl traffic. Rinnegan comes with cert check bypass script
+  for openssl. Frida scripts are present in ``build/frida/``, adding a new script there requires you to redeploy
+  or get that script to target and then just use script name without extension.
+
+.. code-block:: bash
+
+   $ ./bin/rinnegan.sh "nnx" exec apk add py-pip
+   $ ./bin/rinnegan.sh "nnx" exec pip install frida-tools
+   $ ./bin/rinnegan.sh "nnx" agent module run frida 125 ssl-bypass
+
+5. Last word
+============
+
+Rinnegan is a very experimental software which gets feature as and when I need them, but it has been super helpful in reversing
+some complex blackbox systems. It was built to solve my constant frustration of having to check processes, trace them, redirect
+traffic and tamper with those.
+
+If something seems to be not working
+
+* Wipe agent from particular target.
+* Kill rinnegan related processes (HINT: Use exec).
+* Redeploy agent and resume.
