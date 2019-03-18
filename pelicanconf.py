@@ -27,7 +27,7 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
 # Social widget
 SOCIAL = (('<i class="fa fa-twitter"></i> @tunnelshade_', 'https://twitter.com/tunnelshade_'),
           ('<i class="fa fa-github"></i> Github', 'https://github.com/tunnelshade'),
-          ('<i class="fa fa-linkedin"></i> LinkedIn', 'https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/'),
+          ('<i class="fa fa-linkedin"></i> LinkedIn', 'https://www.linkedin.com/in/tunnelshade/'),
           ('<i class="fa fa-envelope"></i> domain_without_tld@gmail.com', 'domain_without_tld@gmail.com'),)
 
 DEFAULT_PAGINATION = 5
