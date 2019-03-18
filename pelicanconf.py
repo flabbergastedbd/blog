@@ -28,7 +28,7 @@ LINKS = (('Pelican', 'http://getpelican.com/'),
 SOCIAL = (('<i class="fa fa-twitter"></i> @tunnelshade_', 'https://twitter.com/tunnelshade_'),
           ('<i class="fa fa-github"></i> Github', 'https://github.com/tunnelshade'),
           ('<i class="fa fa-linkedin"></i> LinkedIn', 'https://in.linkedin.com/pub/bharadwaj-machiraju/45/109/38/'),
-          ('<i class="fa fa-envelope"></i> domain@gmail.com', 'domain@gmail.com'),)
+          ('<i class="fa fa-envelope"></i> domain_without_tld@gmail.com', 'domain_without_tld@gmail.com'),)
 
 DEFAULT_PAGINATION = 5
 PAGINATION_PATTERNS = (
