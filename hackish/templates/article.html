@@ -1,4 +1,7 @@
 {% extends "blog_base.html" %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
 {% block head %}
   {{ super() }}
   {% if article.description %}

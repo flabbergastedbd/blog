@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+
+{% if page.title|length > 1 %}
+  {% block title %}{{ page.title }}{% endblock %}
+{% endif %}
+
 {% block subheading %}
   {% if page.title|length > 1 %}
     &raquo; {{ page.title }}
