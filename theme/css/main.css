@@ -97,3 +97,6 @@ tt {
   border: 2px;
 }
 
+table {
+  @extend pure-table;
+}
