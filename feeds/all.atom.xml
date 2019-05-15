@@ -1,5 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="https://tunnelshade.in/" rel="alternate"></link><link href="https://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>https://tunnelshade.in/</id><updated>2018-12-02T00:00:00+05:30</updated><entry><title>Rinnegan - A distributed tracer for blackbox systems</title><link href="https://tunnelshade.in/blog/2018/12/rinnegan-walkthrough/" rel="alternate"></link><published>2018-12-02T00:00:00+05:30</published><updated>2018-12-02T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-12-02:/blog/2018/12/rinnegan-walkthrough/</id><summary type="html">&lt;div class="section" id="tldr"&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>bharadwaj.machiraju</title><link href="https://tunnelshade.in/" rel="alternate"></link><link href="https://tunnelshade.in/feeds/all.atom.xml" rel="self"></link><id>https://tunnelshade.in/</id><updated>2019-05-14T00:00:00+05:30</updated><entry><title>Quick linux kernel with gdb setup with little help from Linux distros</title><link href="https://tunnelshade.in/blog/2019/05/linux-kernel-gdb-setup/" rel="alternate"></link><published>2019-05-14T00:00:00+05:30</published><updated>2019-05-14T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2019-05-14:/blog/2019/05/linux-kernel-gdb-setup/</id><summary type="html">&lt;div class="section" id="intro"&gt;
+&lt;h2&gt;Intro&lt;/h2&gt;
+&lt;p&gt;When messing around with a linux kernel module I needed to have a &lt;strong&gt;debuggable kernel with symbols&lt;/strong&gt;.
+It was a roller coaster ride from there to what I got working because of multiple reasons that I
+will try to outline here.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="requirements"&gt;
+&lt;h2&gt;Requirements&lt;/h2&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;A working linux kernel with shell access …&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;</summary><content type="html">&lt;div class="section" id="intro"&gt;
+&lt;h2&gt;Intro&lt;/h2&gt;
+&lt;p&gt;When messing around with a linux kernel module I needed to have a &lt;strong&gt;debuggable kernel with symbols&lt;/strong&gt;.
+It was a roller coaster ride from there to what I got working because of multiple reasons that I
+will try to outline here.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="requirements"&gt;
+&lt;h2&gt;Requirements&lt;/h2&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;A working linux kernel with shell access so that I can write and test my exploits.&lt;/li&gt;
+&lt;li&gt;Minimal amount of steps to get it working.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="failed-attempts"&gt;
+&lt;h2&gt;Failed Attempts&lt;/h2&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Compiling own kernel with debug symbols and using busybox shell as rdinit is a good idea if you just
+want to debug kernel. If you have any complex module this is a very bad idea.&lt;/li&gt;
+&lt;li&gt;Distro's kernels also have lots of patches to be applied before compiling them which makes it daunting
+to do it seperately without the respective package manager.&lt;/li&gt;
+&lt;li&gt;Using busybox shell as &lt;a class="reference external" href="https://stackoverflow.com/questions/20744200/how-is-the-init-process-started-in-the-linux-kernel"&gt;init&lt;/a&gt; with a centos disk. This again cuts down on init support etc. Module
+that I was debugging needed insertion using a systemd unit. If using busybox, I need to ensure all
+prerequisites to insmod the module which is a waste of time.&lt;/li&gt;
+&lt;li&gt;Using something like &lt;a class="reference external" href="http://sysprogs.com/VBoxGDB/tutorial/"&gt;virtualbox gdb&lt;/a&gt; stub, this is too heavy and pointless on a linux host.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="tips"&gt;
+&lt;h2&gt;Tips&lt;/h2&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Just use &lt;a class="reference external" href="https://www.vagrantup.com/"&gt;vagrant&lt;/a&gt; to get minimal server image. Better to pick distro for which you have the installer
+package like rpm/deb/tar.xz.&lt;/li&gt;
+&lt;li&gt;Stick to distro's &lt;a class="reference external" href="https://stackoverflow.com/questions/20744200/how-is-the-init-process-started-in-the-linux-kernel"&gt;init&lt;/a&gt; if your module or service needs a full distro like emulation to work.&lt;/li&gt;
+&lt;li&gt;Use &lt;a class="reference external" href="https://www.qemu.org/"&gt;qemu&lt;/a&gt; on a linux machine with kvm enabled, it sucks big time on osx though.&lt;/li&gt;
+&lt;li&gt;Use something like &lt;a class="reference external" href="https://github.com/hugsy/gef"&gt;gef&lt;/a&gt; or &lt;a class="reference external" href="https://github.com/radare/radare2"&gt;radare2&lt;/a&gt; for better debugging support. Vanilla gdb is never good for exploit dev.&lt;/li&gt;
+&lt;li&gt;Ensure that some symbol like &lt;tt class="docutils literal"&gt;start_kernel&lt;/tt&gt; has same address (/proc/kallsyms) in booted kernel as your &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Vmlinux"&gt;vmlinux&lt;/a&gt; file.&lt;/li&gt;
+&lt;li&gt;There are plenty of &lt;a class="reference external" href="https://www.kernel.org/doc/html/v4.10/dev-tools/gdb-kernel-debugging.html"&gt;gdb macros&lt;/a&gt; for getting
+around kernel structures, use them. Be aware that kernel structures change with versions.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="steps"&gt;
+&lt;h2&gt;Steps&lt;/h2&gt;
+&lt;p&gt;Let us run a working CentOS 7 with debug symbols in qemu and debug with gdb.&lt;/p&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Start up a simple vagrant box with the minimal centos image.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ vagrant init centos/7
+$ vagrant up
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;SSH into the vm and do whatever permanant modifications (like installing packages etc..) are necessary.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ vagrant ssh
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;This step is very distro dependent. Download debug info for running kernel either using package manager
+or &lt;a class="reference external" href="http://debuginfo.centos.org/7/x86_64/"&gt;direct download&lt;/a&gt;. Get those debug packages onto host and extract them.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ uname -r
+&lt;span class="m"&gt;3&lt;/span&gt;.10.0-957.12.1.el7.x86_64
+
+$ debuginfo-install --downloadonly &lt;span class="m"&gt;3&lt;/span&gt;.10.0-957.12.1.el7
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Remove all unnecessary systemd units that you don't need. Make the kernel boot into console mode, disable kaslr
+and enable &lt;a class="reference external" href="https://en.wikipedia.org/wiki/KGDB"&gt;kgdb&lt;/a&gt; by adding following line to kernel parameters.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Add this to default parameters in /etc/default/grub&lt;/span&gt;
+&lt;span class="c1"&gt;# console=ttyS0,115200 kgdboc=ttyS0,115200 nokaslr&lt;/span&gt;
+
+$ grub2-mkconfig -o /boot/grub2/grub.cfg
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Use vagrant snapshots at this stage to keep it easy to revert if necessary.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;dl class="first docutils"&gt;
+&lt;dt&gt;Start the kernel with qemu.&lt;/dt&gt;
+&lt;dd&gt;&lt;ul class="first simple"&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;-enable-kvm&lt;/span&gt;&lt;/tt&gt; to use linux kvm&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;-hda&lt;/span&gt;&lt;/tt&gt; to specify hd0 for vm&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;-nographic&lt;/span&gt;&lt;/tt&gt; to start console only mode of qemu&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;-s&lt;/span&gt;&lt;/tt&gt; to start gdbserver of qemu on :1234 (check help)&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;-m&lt;/span&gt;&lt;/tt&gt; to specify memory which we set as 3 gigs here.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="last"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ qemu-system-x86_64 -enable-kvm -hda path_to_virtualmachine_disk.vmdk -nographic -s -m &lt;span class="m"&gt;3072&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;On host, from the directory where debug rpms were extracted let us start gdb and point it to source&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ cat kerinit.gdb
+
+dir usr/src/debug/kernel-3.10.0-957.12.1.el7/linux-3.10.0-957.12.1.el7.x86_64
+target remote :1234
+
+$ gdb -x kerninit.gdb usr/lib/debug/lib/modules/3.10.0-957.12.1.el7.x86_64/vmlinux
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Following is a breakpoint hit at &lt;tt class="docutils literal"&gt;do_sys_open&lt;/tt&gt;&lt;/p&gt;
+&lt;img alt="" src="https://tunnelshade.in/images/kernel_debugging_gdb.png" /&gt;
+&lt;/div&gt;
+</content><category term="reversing"></category><category term="tools"></category></entry><entry><title>Rinnegan - A distributed tracer for blackbox systems</title><link href="https://tunnelshade.in/blog/2018/12/rinnegan-walkthrough/" rel="alternate"></link><published>2018-12-02T00:00:00+05:30</published><updated>2018-12-02T00:00:00+05:30</updated><author><name>Bharadwaj Machiraju</name></author><id>tag:tunnelshade.in,2018-12-02:/blog/2018/12/rinnegan-walkthrough/</id><summary type="html">&lt;div class="section" id="tldr"&gt;
 &lt;h2&gt;TLDR&lt;/h2&gt;
 &lt;p&gt;Rinnegan is a tool that I wrote for greatly reducing my time in understanding and reversing
 complex distributed systems. Source available at &lt;a class="reference external" href="https://github.com/tunnelshade/rinnegan"&gt;https://github.com/tunnelshade/rinnegan&lt;/a&gt;.&lt;/p&gt;

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <title>Quick linux kernel with gdb setup with little help from Linux distros</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8" />
+        <link href="https://tunnelshade.in/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="bharadwaj.machiraju Full Atom Feed" />
+
+
+    <meta name="tags" content="reversing" />
+    <meta name="tags" content="tools" />
+
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" integrity="sha384-b92sF+wDNTHrfEtRaYo+EpcA8FUyHOSXrdxKc9XB9kaaX1rSQAgMevW6cYeE5Bdv" crossorigin="anonymous">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://tunnelshade.in/theme/css/main.css">
+        <!-- End CSS -->
+  <link rel="stylesheet" href="https://tunnelshade.in/theme/css/blog.css">
+
+        <!-- Google Analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-40078808-2', 'tunnelshade.in');
+  ga('send', 'pageview');
+</script></head>
+
+<body id="index" class="home">
+  <br>
+  <div class="pure-g">
+    <div class="pure-u-2-24"></div>
+    <div class="pure-u-20-24">
+      <div class="pure-g">
+        <div class="pure-u-md-20-24 pure-u-lg-20-24 pure-u-sm-24-24" style="display: flex; align-items: center;">
+            <h1>
+              <a href="https://tunnelshade.in/">bharadwaj.machiraju </a> <a>  &raquo; <a href="https://tunnelshade.in/blog/index.html">Blog</a> <a href="https://tunnelshade.in/feeds/all.atom.xml"><i class="fa fa-rss"></i></a>
+</a>
+            </h1>
+        </div>
+        <div class="pure-u-md-4-24 pure-u-lg-4-24 pure-u-sm-0-24" style="display: flex; align-items: center;">
+          <img class="logo" src="https://tunnelshade.in/theme/images/logo.png"/>
+        </div>
+      </div>
+      <br>
+      <hr>
+      <br>
+      <div class="pure-g">
+  <div class="pure-g">
+    <div class="pure-u-1 pure-u-md-4-5 pure-u-lg-4-5 pure-u-xl-4-5">
+<section id="content" class="body">
+  <header class="pure-g"><div class="pure-u-1">
+    <h2 class="entry-title">
+      <a href="https://tunnelshade.in/blog/2019/05/linux-kernel-gdb-setup/" rel="bookmark"
+         title="Permalink to Quick linux kernel with gdb setup with little help from Linux distros">Quick linux kernel with gdb setup with little help from Linux distros</a></h2>
+  </div></header>
+  <footer class="pure-g"><div class="pure-u-1">
+
+    <time class="published" datetime="2019-05-14T00:00:00+05:30">
+      [14-05-19]
+    </time>
+
+    [<a href="/category/tools/">Tools</a>]
+
+    [reversing,tools]
+
+  </div></footer><!-- /.post-info -->
+  <div class="pure-g"><div class="pure-u-1">
+    <div class="section" id="intro">
+<h2>Intro</h2>
+<p>When messing around with a linux kernel module I needed to have a <strong>debuggable kernel with symbols</strong>.
+It was a roller coaster ride from there to what I got working because of multiple reasons that I
+will try to outline here.</p>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements</h2>
+<ul class="simple">
+<li>A working linux kernel with shell access so that I can write and test my exploits.</li>
+<li>Minimal amount of steps to get it working.</li>
+</ul>
+</div>
+<div class="section" id="failed-attempts">
+<h2>Failed Attempts</h2>
+<ul class="simple">
+<li>Compiling own kernel with debug symbols and using busybox shell as rdinit is a good idea if you just
+want to debug kernel. If you have any complex module this is a very bad idea.</li>
+<li>Distro's kernels also have lots of patches to be applied before compiling them which makes it daunting
+to do it seperately without the respective package manager.</li>
+<li>Using busybox shell as <a class="reference external" href="https://stackoverflow.com/questions/20744200/how-is-the-init-process-started-in-the-linux-kernel">init</a> with a centos disk. This again cuts down on init support etc. Module
+that I was debugging needed insertion using a systemd unit. If using busybox, I need to ensure all
+prerequisites to insmod the module which is a waste of time.</li>
+<li>Using something like <a class="reference external" href="http://sysprogs.com/VBoxGDB/tutorial/">virtualbox gdb</a> stub, this is too heavy and pointless on a linux host.</li>
+</ul>
+</div>
+<div class="section" id="tips">
+<h2>Tips</h2>
+<ul class="simple">
+<li>Just use <a class="reference external" href="https://www.vagrantup.com/">vagrant</a> to get minimal server image. Better to pick distro for which you have the installer
+package like rpm/deb/tar.xz.</li>
+<li>Stick to distro's <a class="reference external" href="https://stackoverflow.com/questions/20744200/how-is-the-init-process-started-in-the-linux-kernel">init</a> if your module or service needs a full distro like emulation to work.</li>
+<li>Use <a class="reference external" href="https://www.qemu.org/">qemu</a> on a linux machine with kvm enabled, it sucks big time on osx though.</li>
+<li>Use something like <a class="reference external" href="https://github.com/hugsy/gef">gef</a> or <a class="reference external" href="https://github.com/radare/radare2">radare2</a> for better debugging support. Vanilla gdb is never good for exploit dev.</li>
+<li>Ensure that some symbol like <tt class="docutils literal">start_kernel</tt> has same address (/proc/kallsyms) in booted kernel as your <a class="reference external" href="https://en.wikipedia.org/wiki/Vmlinux">vmlinux</a> file.</li>
+<li>There are plenty of <a class="reference external" href="https://www.kernel.org/doc/html/v4.10/dev-tools/gdb-kernel-debugging.html">gdb macros</a> for getting
+around kernel structures, use them. Be aware that kernel structures change with versions.</li>
+</ul>
+</div>
+<div class="section" id="steps">
+<h2>Steps</h2>
+<p>Let us run a working CentOS 7 with debug symbols in qemu and debug with gdb.</p>
+<ol class="arabic">
+<li><p class="first">Start up a simple vagrant box with the minimal centos image.</p>
+<blockquote>
+<div class="highlight"><pre><span></span>$ vagrant init centos/7
+$ vagrant up
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first">SSH into the vm and do whatever permanant modifications (like installing packages etc..) are necessary.</p>
+<blockquote>
+<div class="highlight"><pre><span></span>$ vagrant ssh
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first">This step is very distro dependent. Download debug info for running kernel either using package manager
+or <a class="reference external" href="http://debuginfo.centos.org/7/x86_64/">direct download</a>. Get those debug packages onto host and extract them.</p>
+<blockquote>
+<div class="highlight"><pre><span></span>$ uname -r
+<span class="m">3</span>.10.0-957.12.1.el7.x86_64
+
+$ debuginfo-install --downloadonly <span class="m">3</span>.10.0-957.12.1.el7
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first">Remove all unnecessary systemd units that you don't need. Make the kernel boot into console mode, disable kaslr
+and enable <a class="reference external" href="https://en.wikipedia.org/wiki/KGDB">kgdb</a> by adding following line to kernel parameters.</p>
+<blockquote>
+<div class="highlight"><pre><span></span><span class="c1"># Add this to default parameters in /etc/default/grub</span>
+<span class="c1"># console=ttyS0,115200 kgdboc=ttyS0,115200 nokaslr</span>
+
+$ grub2-mkconfig -o /boot/grub2/grub.cfg
+</pre></div>
+</blockquote>
+</li>
+<li><p class="first">Use vagrant snapshots at this stage to keep it easy to revert if necessary.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Start the kernel with qemu.</dt>
+<dd><ul class="first simple">
+<li><tt class="docutils literal"><span class="pre">-enable-kvm</span></tt> to use linux kvm</li>
+<li><tt class="docutils literal"><span class="pre">-hda</span></tt> to specify hd0 for vm</li>
+<li><tt class="docutils literal"><span class="pre">-nographic</span></tt> to start console only mode of qemu</li>
+<li><tt class="docutils literal"><span class="pre">-s</span></tt> to start gdbserver of qemu on :1234 (check help)</li>
+<li><tt class="docutils literal"><span class="pre">-m</span></tt> to specify memory which we set as 3 gigs here.</li>
+</ul>
+<div class="last"><div class="highlight"><pre><span></span>$ qemu-system-x86_64 -enable-kvm -hda path_to_virtualmachine_disk.vmdk -nographic -s -m <span class="m">3072</span>
+</pre></div>
+</div></dd>
+</dl>
+</li>
+<li><p class="first">On host, from the directory where debug rpms were extracted let us start gdb and point it to source</p>
+<blockquote>
+<div class="highlight"><pre><span></span>$ cat kerinit.gdb
+
+dir usr/src/debug/kernel-3.10.0-957.12.1.el7/linux-3.10.0-957.12.1.el7.x86_64
+target remote :1234
+
+$ gdb -x kerninit.gdb usr/lib/debug/lib/modules/3.10.0-957.12.1.el7.x86_64/vmlinux
+</pre></div>
+</blockquote>
+</li>
+</ol>
+<p>Following is a breakpoint hit at <tt class="docutils literal">do_sys_open</tt></p>
+<img alt="" src="https://tunnelshade.in/images/kernel_debugging_gdb.png" />
+</div>
+
+  </div></div><!-- /.entry-content -->
+</section>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://tunnelshade.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>    </div>
+    <div class="pure-u-1 pure-u-md-1-5 pure-u-lg-1-5 pure-u-xl-1-5 blog_sidebar">
+      <strong>Categories</strong>
+      <ul>
+          <li><a href="/category/bugs/">Bugs</a> [6]</li>
+          <li><a href="/category/hacks/">Hacks</a> [2]</li>
+          <li><a href="/category/information/">Information</a> [5]</li>
+          <li><a href="/category/linux/">Linux</a> [7]</li>
+          <li><a href="/category/python/">Python</a> [4]</li>
+          <li><a href="/category/tools/">Tools</a> [13]</li>
+      </ul>
+
+      <br>
+
+      <strong>Tags</strong>
+      <ul>
+          <li><a href="/tag/reversing/">reversing</a> [6]</li>
+          <li><a href="/tag/tools/">tools</a> [12]</li>
+          <li><a href="/tag/fuzzing/">fuzzing</a> [3]</li>
+          <li><a href="/tag/afl/">afl</a> [2]</li>
+          <li><a href="/tag/tricks/">tricks</a> [11]</li>
+          <li><a href="/tag/info/">info</a> [12]</li>
+          <li><a href="/tag/python/">python</a> [3]</li>
+          <li><a href="/tag/hacks/">hacks</a> [5]</li>
+          <li><a href="/tag/conference/">conference</a> [2]</li>
+          <li><a href="/tag/linux/">linux</a> [5]</li>
+          <li><a href="/tag/owtf/">owtf</a> [3]</li>
+          <li><a href="/tag/screenshots/">screenshots</a> [3]</li>
+      </ul>
+
+      <br>
+
+      <strong>Author</strong>
+<ul class="no_bullets">
+    <li><a class="no_underline" href="https://twitter.com/tunnelshade_"><i class="fa fa-twitter"></i> @tunnelshade_</a></li>
+    <li><a class="no_underline" href="https://github.com/tunnelshade"><i class="fa fa-github"></i> Github</a></li>
+    <li><a class="no_underline" href="https://www.linkedin.com/in/tunnelshade/"><i class="fa fa-linkedin"></i> LinkedIn</a></li>
+    <li><a class="no_underline" href="domain_without_tld@gmail.com"><i class="fa fa-envelope"></i> domain_without_tld@gmail.com</a></li>
+</ul>
+    </div>
+  </div>
+      </div>
+    </div>
+    <div class="pure-u-2-24"></div>
+  </div>
+</body>
+</html>
