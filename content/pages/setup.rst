@@ -137,11 +137,6 @@ This is how dark I generally work, with fancy rgb lights
 .. image:: {static}/images/desktop-blue.png
         :scale: 50%
 
-When my mom was curious about my keyboard
-
-.. image:: {static}/images/desktop-mom.jpg
-        :scale: 50%
-
 More screenshots in dotfiles_.
 
 
